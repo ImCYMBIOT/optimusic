@@ -1,0 +1,34 @@
+[package]
+name = "optimusic"
+version = "0.1.0"
+description = "Optimusic: an unofficial, lightweight YouTube Music desktop client built on Tauri"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/ImCYMBIOT/optimusic"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon", "image-png"] }
+tauri-plugin-single-instance = "2"
+tauri-plugin-window-state = "2"
+tauri-plugin-opener = "2"
+# OS media integration: MPRIS on Linux, SMTC on Windows, Now Playing on macOS.
+# This is what makes your keyboard's media keys and the GNOME media widget work.
+souvlaki = { version = "0.8", default-features = false, features = ["use_zbus"] }
+serde = { version = "1", features = ["derive"] }
+url = "2"
+
+# Direct WebView2 access for the low-memory mode while hidden (versions match wry's).
+[target.'cfg(windows)'.dependencies]
+webview2-com = "0.39"
+windows-core = "0.62"
+
+# Small, fast release binary
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

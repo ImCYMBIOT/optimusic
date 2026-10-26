@@ -1,0 +1,1 @@
+{"music-remote":{"identifier":"music-remote","description":"Lets music.youtube.com report now-playing info, and nothing more.","remote":{"urls":["https://music.youtube.com/*"]},"local":true,"windows":["main"],"permissions":["allow-track-update"]}}
