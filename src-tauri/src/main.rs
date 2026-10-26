@@ -1,6 +1,9 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod discord;
+
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::mpsc::Sender;
 use std::sync::Mutex;
 use std::time::Duration;
 
@@ -9,7 +12,7 @@ use souvlaki::{
     MediaControlEvent, MediaControls, MediaMetadata, MediaPlayback, MediaPosition, PlatformConfig,
     SeekDirection,
 };
-use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
+use tauri::menu::{CheckMenuItem, IsMenuItem, Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Manager, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder, Wry};
 use tauri_plugin_opener::OpenerExt;
@@ -47,17 +50,25 @@ struct AppState {
     play_pause: Mutex<Option<MenuItem<Wry>>>,
     quitting: AtomicBool,
     backgrounded: AtomicBool,
+    discord: Mutex<Option<Sender<discord::Msg>>>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 struct TrackInfo {
     title: String,
     artist: String,
     album: Option<String>,
     art: Option<String>,
+    #[serde(rename = "videoId")]
+    video_id: Option<String>,
     duration: f64,
     position: f64,
     playing: bool,
+}
+
+/// "Show on Discord" is on unless this marker file exists in the app's config folder.
+fn discord_off_marker(app: &AppHandle) -> Option<std::path::PathBuf> {
+    Some(app.path().app_config_dir().ok()?.join("discord-off"))
 }
 
 /// Run a player action inside the page (see bridge.js).
@@ -144,6 +155,9 @@ fn track_update(info: TrackInfo, state: State<'_, AppState>) {
     if let Some(item) = state.play_pause.lock().unwrap().as_ref() {
         let _ = item.set_text(if info.playing { "Pause" } else { "Play" });
     }
+    if let Some(tx) = state.discord.lock().unwrap().as_ref() {
+        let _ = tx.send(discord::Msg::Track(info));
+    }
 }
 
 /// Hook into MPRIS (Linux) / SMTC (Windows) / Now Playing (macOS).
@@ -218,6 +232,7 @@ fn main() {
             play_pause: Mutex::new(None),
             quitting: AtomicBool::new(false),
             backgrounded: AtomicBool::new(false),
+            discord: Mutex::new(None),
         })
         .invoke_handler(tauri::generate_handler![track_update])
         .setup(|app| {
@@ -262,21 +277,43 @@ fn main() {
             let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let sep1 = PredefinedMenuItem::separator(app)?;
             let sep2 = PredefinedMenuItem::separator(app)?;
-            let menu = Menu::with_items(
-                app,
-                &[&now_playing, &sep1, &play_pause, &next, &prev, &sep2, &show, &quit],
-            )?;
+            let discord_on = !discord_off_marker(&handle).is_some_and(|p| p.exists());
+            let discord_item =
+                CheckMenuItem::with_id(app, "discord", "Show on Discord", true, discord_on, None::<&str>)?;
+            let mut items: Vec<&dyn IsMenuItem<Wry>> =
+                vec![&now_playing, &sep1, &play_pause, &next, &prev, &sep2];
+            if let Some(id) = discord::client_id() {
+                *app.state::<AppState>().discord.lock().unwrap() = Some(discord::spawn(id, discord_on));
+                items.push(&discord_item);
+            }
+            items.extend([&show as &dyn IsMenuItem<Wry>, &quit]);
+            let menu = Menu::with_items(app, &items)?;
 
+            let discord_toggle = discord_item.clone();
             TrayIconBuilder::with_id("main")
                 .icon(app.default_window_icon().unwrap().clone())
                 .tooltip("Optimusic")
                 .menu(&menu)
                 .show_menu_on_left_click(false)
-                .on_menu_event(|app, event| match event.id.as_ref() {
+                .on_menu_event(move |app, event| match event.id.as_ref() {
                     "toggle" => control(app, "toggle"),
                     "next" => control(app, "next"),
                     "prev" => control(app, "prev"),
                     "show" => toggle_window(app),
+                    "discord" => {
+                        let on = discord_toggle.is_checked().unwrap_or(true);
+                        if let Some(tx) = app.state::<AppState>().discord.lock().unwrap().as_ref() {
+                            let _ = tx.send(discord::Msg::Enabled(on));
+                        }
+                        if let Some(marker) = discord_off_marker(app) {
+                            let _ = if on {
+                                std::fs::remove_file(&marker)
+                            } else {
+                                std::fs::create_dir_all(marker.parent().unwrap())
+                                    .and_then(|_| std::fs::write(&marker, ""))
+                            };
+                        }
+                    }
                     "quit" => {
                         app.state::<AppState>().quitting.store(true, Ordering::SeqCst);
                         app.exit(0);

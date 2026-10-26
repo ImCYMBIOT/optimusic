@@ -32,6 +32,9 @@ Your numbers will vary with your PC, your library and what's on screen.
 - **Media keys and OS media controls:** the Windows media overlay (SMTC), MPRIS on Linux
   (GNOME/KDE media widget), Now Playing on macOS
 - **Tray player:** now playing, play/pause, next, previous, show/hide, quit
+- **Discord Rich Presence:** "Listening to Optimusic" with the song, artist, cover art, a
+  progress bar and a "Listen on YouTube Music" button. Cleared when you pause, idle when Discord
+  isn't running, and switchable from the tray ("Show on Discord")
 - **Background playback:** closing the window hides it to the tray and the music keeps playing
 - **Low-memory background mode:** while hidden or minimized, the webview stops rendering and trims its memory
 - **Single instance:** launching it again just brings the window back
@@ -105,12 +108,16 @@ powershell -ExecutionPolicy Bypass -File .\bench.ps1 -App tauri -Phase playing -
 - **Blank / white window on Linux (often NVIDIA):** `WEBKIT_DISABLE_DMABUF_RENDERER=1 optimusic`
 - **Google says "this browser may not be secure" at sign-in:** try a different user agent, e.g.
   `OPTIMUSIC_USER_AGENT="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15" optimusic`
+- **Nothing shows on Discord:** turn on Discord's User Settings → Activity Privacy → "Share
+  your activity status", check "Show on Discord" in the tray menu, and make sure music is playing
+  (presence is cleared while paused).
 - **Tray icon missing on GNOME:** enable the "AppIndicator and KStatusNotifierItem Support" extension.
 
 ## Project layout
 ```
 src-tauri/
   src/main.rs          window, tray, media controls, navigation policy, WebView2 tuning
+  src/discord.rs       Discord Rich Presence, on its own thread
   src/bridge.js        injected into the page: player control + now-playing reports
   capabilities/        IPC allow-list for music.youtube.com
   tauri.conf.json
@@ -118,7 +125,6 @@ bench.ps1              Windows CPU/memory benchmark for a whole process tree
 ```
 
 ## Roadmap
-- Discord Rich Presence (off when Discord isn't running, cleared on pause, tray toggle)
 - Global hotkeys for desktops without MPRIS
 - Mini-player window, desktop notifications on track change
 - Last.fm scrobbling

@@ -36,11 +36,14 @@
     const v = video();
     if (!md || !v || !md.title) return null;
     const art = md.artwork && md.artwork.length ? md.artwork[md.artwork.length - 1].src : null;
+    const p = player();
+    const data = p && p.getVideoData ? p.getVideoData() : null;
     return {
       title: md.title || "",
       artist: md.artist || "",
       album: md.album || null,
       art,
+      videoId: (data && data.video_id) || null,
       duration: isFinite(v.duration) ? v.duration : 0,
       position: v.currentTime || 0,
       playing: !v.paused,
