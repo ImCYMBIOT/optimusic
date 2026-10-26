@@ -33,7 +33,7 @@ Your numbers will vary with your PC, your library and what's on screen.
   (GNOME/KDE media widget), Now Playing on macOS
 - **Tray player:** now playing, play/pause, next, previous, show/hide, quit
 - **Discord Rich Presence:** "Listening to Optimusic" with the song, artist, cover art, a
-  progress bar and a "Listen on YouTube Music" button. Cleared when you pause, idle when Discord
+  progress bar, and "Listen on YouTube Music" and "Get Optimusic" buttons. Cleared when you pause, idle when Discord
   isn't running, and switchable from the tray ("Show on Discord")
 - **Background playback:** closing the window hides it to the tray and the music keeps playing
 - **Low-memory background mode:** while hidden or minimized, the webview stops rendering and trims its memory

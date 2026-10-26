@@ -17,6 +17,9 @@ use crate::TrackInfo;
 /// Empty turns the feature off; `OPTIMUSIC_DISCORD_CLIENT_ID` overrides it.
 const CLIENT_ID: &str = "1564122032537337927";
 
+const TAGLINE: &str = "Optimusic · lightweight YouTube Music desktop app";
+const DOWNLOAD_URL: &str = "https://github.com/ImCYMBIOT/optimusic/releases/latest";
+
 /// How often to look for Discord when it isn't running (or went away).
 const RETRY: Duration = Duration::from_secs(30);
 
@@ -128,13 +131,22 @@ fn activity(t: &TrackInfo, start: i64, end: i64, rich: bool) -> Activity<'_> {
         .status_display_type(StatusDisplayType::Details)
         .details(field(&t.title))
         .state(field(&t.artist))
-        .timestamps(timestamps)
-        .assets(assets);
-    if let Some(id) = t.video_id.as_deref().filter(|id| rich && !id.is_empty()) {
-        let url = format!("https://music.youtube.com/watch?v={id}");
-        a = a.buttons(vec![Button::new("Listen on YouTube Music", url)]);
+        .timestamps(timestamps);
+    if !rich {
+        return a.assets(assets);
     }
-    a
+    // Small Optimusic badge on the cover; hovering it says what the app is.
+    if art != "logo" {
+        assets = assets.small_image("logo").small_text(TAGLINE);
+    }
+    let mut buttons = Vec::new();
+    if let Some(id) = t.video_id.as_deref().filter(|id| !id.is_empty()) {
+        let url = format!("https://music.youtube.com/watch?v={id}");
+        a = a.details_url(url.clone());
+        buttons.push(Button::new("Listen on YouTube Music", url));
+    }
+    buttons.push(Button::new("Get Optimusic", DOWNLOAD_URL));
+    a.assets(assets).buttons(buttons)
 }
 
 /// Discord text fields must be 2–128 characters.
@@ -160,7 +172,7 @@ mod tests {
             title: "Test Track".into(),
             artist: "Optimusic".into(),
             album: Some("Test Album".into()),
-            art: None,
+            art: Some("https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg".into()),
             video_id: Some("dQw4w9WgXcQ".into()),
             duration: 200.0,
             position: 20.0,
