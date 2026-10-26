@@ -14,15 +14,20 @@ tunes the webview to use much less memory.
 > YouTube Music website, under its terms.
 
 ## Why Optimusic
-Memory measured on Windows with `bench.ps1` (private working set, whole process tree, same as
-Task Manager), while playing music:
+Memory on Windows, measured with `bench.ps1` (private working set of the whole process tree,
+the same number Task Manager shows):
 
-| | Window open | Hidden to tray | Processes |
+| | Idle | Playing | Hidden to tray, playing |
 |---|---|---|---|
-| Plain Tauri webview | ~375 MB | ~345 MB | 9 |
-| **Optimusic** | **~200 MB** | **~150 MB** | 5 |
+| **Optimusic v0.1.0** | **~255 MB**\* | **~200 MB** | **~150 MB** |
+| Optimusic before memory tuning | 296 MB | 297 MB | 380 MB |
+| [YTMDesktop](https://github.com/ytmdesktop/ytmdesktop) (Electron) | 343 MB | 413 MB | 343 MB |
+| Firefox with a YouTube Music tab | 766 MB | 758 MB | 802 MB |
 
-Idle in the tray it drops to about 45 MB.
+Hidden to the tray with nothing playing, Optimusic drops to about 45 MB.
+
+\* Idle for v0.1.0 was measured signed out on the home page. Your numbers will vary with your
+PC, your library and what's on screen.
 
 ## Features
 - **Media keys and OS media controls:** the Windows media overlay (SMTC), MPRIS on Linux
