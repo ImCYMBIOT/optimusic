@@ -29,7 +29,7 @@
       "icons/icon.ico"
     ],
     "linux": {
-      "appImage": {
+      "appimage": {
         "bundleMediaFramework": true
       },
       "deb": {
