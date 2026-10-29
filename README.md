@@ -50,6 +50,12 @@ Download an installer from the [latest release](https://github.com/ImCYMBIOT/opt
 WebView2 is built into Windows 10 and 11; the installer downloads it if it's missing. The
 installers aren't code-signed yet, so SmartScreen may warn the first time (More info → Run anyway).
 
+## Install (Linux)
+From the [latest release](https://github.com/ImCYMBIOT/optimusic/releases/latest):
+- **Ubuntu / Debian:** `sudo apt install ./Optimusic_x.y.z_amd64.deb` (pulls in the GStreamer codecs it needs)
+- **Any distro:** the `.AppImage`; make it executable (`chmod +x Optimusic_*.AppImage`) and run it.
+  It includes its own audio codecs.
+
 ## Build from source
 
 ### Windows
