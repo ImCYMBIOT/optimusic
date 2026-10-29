@@ -1,6 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod discord;
+mod updates;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::Sender;
@@ -12,7 +13,7 @@ use souvlaki::{
     MediaControlEvent, MediaControls, MediaMetadata, MediaPlayback, MediaPosition, PlatformConfig,
     SeekDirection,
 };
-use tauri::menu::{CheckMenuItem, IsMenuItem, Menu, MenuItem, PredefinedMenuItem};
+use tauri::menu::{CheckMenuItem, IsMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Manager, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder, Wry};
 use tauri_plugin_opener::OpenerExt;
@@ -226,6 +227,7 @@ fn main() {
         }))
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(AppState {
             media: Mutex::new(None),
             now_playing: Mutex::new(None),
@@ -292,8 +294,15 @@ fn main() {
                 *app.state::<AppState>().discord.lock().unwrap() = Some(discord::spawn(id, discord_on));
                 items.push(&discord_item);
             }
-            items.extend([&show as &dyn IsMenuItem<Wry>, &quit]);
+            let (update_modes, check_now) = updates::menu_items(&handle)?;
+            let sep3 = PredefinedMenuItem::separator(app)?;
+            let mut update_items: Vec<&dyn IsMenuItem<Wry>> =
+                update_modes.iter().map(|i| i as &dyn IsMenuItem<Wry>).collect();
+            update_items.extend([&sep3 as &dyn IsMenuItem<Wry>, &check_now]);
+            let updates_menu = Submenu::with_items(app, "Updates", true, &update_items)?;
+            items.extend([&updates_menu as &dyn IsMenuItem<Wry>, &show, &quit]);
             let menu = Menu::with_items(app, &items)?;
+            updates::start(&handle, menu.clone(), update_modes.clone(), check_now.clone())?;
 
             let discord_toggle = discord_item.clone();
             // macOS menu bar icons are monochrome "templates" that follow light/dark mode, and
@@ -331,7 +340,13 @@ fn main() {
                         app.state::<AppState>().quitting.store(true, Ordering::SeqCst);
                         app.exit(0);
                     }
-                    _ => {}
+                    "updates-check" => updates::check_now(app),
+                    "update-install" => updates::install_clicked(app),
+                    id => {
+                        if let Some(mode) = updates::Mode::from_menu_id(id) {
+                            updates::set_mode(app, mode);
+                        }
+                    }
                 })
                 // Left-click toggles the window (Windows; Linux trays only show the menu)
                 .on_tray_icon_event(move |tray, event| {

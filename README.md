@@ -37,6 +37,8 @@ Your numbers will vary with your PC, your library and what's on screen.
   isn't running, and switchable from the tray ("Show on Discord")
 - **Background playback:** closing the window hides it to the tray and the music keeps playing
 - **Low-memory background mode:** while hidden or minimized, the webview stops rendering and trims its memory
+- **Updates your way:** Off, Notify me (default) or Install automatically, from the tray's
+  Updates menu. Every update is signed and checked before it's installed
 - **Single instance:** launching it again just brings the window back
 - Remembers window size and position
 - External links open in your normal browser; Google sign-in stays in the app
@@ -84,6 +86,22 @@ From the [latest release](https://github.com/ImCYMBIOT/optimusic/releases/latest
 
 On macOS Optimusic lives in the menu bar (top right) instead of a tray, and clicking the Dock
 icon brings the window back after you close it.
+
+## Updates
+Pick how Optimusic updates from the tray (menu bar on macOS) → **Updates**:
+
+| Setting | What happens |
+|---|---|
+| **Off** | Optimusic never checks for updates and makes no update requests at all. |
+| **Notify me** (default) | It checks GitHub at start-up and every 6 hours. When there's a new version, an **Update to vX** item appears at the top of the tray menu. Nothing downloads until you click it. |
+| **Install automatically** | Same checks, but a new version is installed the next time you start Optimusic, before any music plays, so a song is never cut off. |
+
+**Check now** is in the same menu. Every update is signed with the project's key, and Optimusic
+refuses any update that isn't. On Linux, `.deb` updates ask for your password, like any package
+install.
+
+Coming from v0.2.x or earlier? Those versions can't update themselves, so install v0.3.0 or newer
+by hand once; it updates itself from then on.
 
 ## Build from source
 
@@ -153,9 +171,11 @@ powershell -ExecutionPolicy Bypass -File .\bench.ps1 -App tauri -Phase playing -
 src-tauri/
   src/main.rs          window, tray, media controls, navigation policy, WebView2 tuning
   src/discord.rs       Discord Rich Presence, on its own thread
+  src/updates.rs       update checks and the tray's Updates menu
   src/bridge.js        injected into the page: player control + now-playing reports
   capabilities/        IPC allow-list for music.youtube.com
   tauri.conf.json
+.github/workflows/     release builds for Windows, Linux and macOS
 bench.ps1              Windows CPU/memory benchmark for a whole process tree
 ```
 
@@ -163,6 +183,19 @@ bench.ps1              Windows CPU/memory benchmark for a whole process tree
 - Global hotkeys for desktops without MPRIS
 - Mini-player window, desktop notifications on track change
 - Last.fm scrobbling
+
+## Forking
+You're welcome to fork Optimusic. Building and running your fork works out of the box. To ship
+**updates** to your own users you'll need your own signing key, because updates are only
+accepted when they're signed with the key that matches the public key built into the app:
+1. `cargo tauri signer generate -w ~/.tauri/yourapp.key`
+2. Put the new public key in `plugins.updater.pubkey` in `src-tauri/tauri.conf.json`, and point
+   `plugins.updater.endpoints` at your own repo's `releases/latest/download/latest.json`.
+3. Create a `release` environment in your repo and add `TAURI_SIGNING_PRIVATE_KEY` and
+   `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` to it.
+
+Also change the app's name, icon and `identifier`, and the Discord client ID in `discord.rs`, so
+your fork isn't confused with Optimusic.
 
 ## Contributing
 Pull requests are welcome. Because every merged change ends up signed and installed on users'

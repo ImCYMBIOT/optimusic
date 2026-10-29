@@ -1,6 +1,6 @@
 [package]
 name = "optimusic"
-version = "0.2.1"
+version = "0.3.0"
 description = "Optimusic: an unofficial, lightweight YouTube Music desktop client built on Tauri"
 edition = "2021"
 license = "MIT"
@@ -20,6 +20,8 @@ souvlaki = { version = "0.8", default-features = false, features = ["use_zbus"] 
 serde = { version = "1", features = ["derive"] }
 url = "2"
 discord-rich-presence = "1.1"
+tauri-plugin-updater = "2"
+serde_json = "1"
 
 # Direct WebView2 access for the low-memory mode while hidden (versions match wry's).
 [target.'cfg(windows)'.dependencies]
