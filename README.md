@@ -164,5 +164,13 @@ bench.ps1              Windows CPU/memory benchmark for a whole process tree
 - Mini-player window, desktop notifications on track change
 - Last.fm scrobbling
 
+## Contributing
+Pull requests are welcome. Because every merged change ends up signed and installed on users'
+machines, each one is reviewed carefully, with extra scrutiny for changes to `.github/workflows/`,
+`build.rs`, dependencies (`Cargo.toml` / `Cargo.lock`), `bridge.js` and `capabilities/`. Small,
+focused PRs with a clear description get merged fastest.
+
+Found a security problem? Please report it privately; see [SECURITY.md](SECURITY.md).
+
 ## License
 MIT, see [LICENSE](LICENSE).
