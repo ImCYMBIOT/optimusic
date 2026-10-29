@@ -261,6 +261,12 @@ fn main() {
             if let Ok(ua) = std::env::var("OPTIMUSIC_USER_AGENT") {
                 builder = builder.user_agent(&ua);
             }
+            // macOS 14+ suspends hidden web views after a few minutes; keep the music going.
+            #[cfg(target_os = "macos")]
+            {
+                builder = builder
+                    .background_throttling(tauri::utils::config::BackgroundThrottlingPolicy::Disabled);
+            }
             #[cfg(target_os = "windows")]
             {
                 let args = std::env::var("OPTIMUSIC_BROWSER_ARGS");
@@ -290,11 +296,18 @@ fn main() {
             let menu = Menu::with_items(app, &items)?;
 
             let discord_toggle = discord_item.clone();
+            // macOS menu bar icons are monochrome "templates" that follow light/dark mode, and
+            // clicking one opens its menu; elsewhere left-click toggles the window instead.
+            #[cfg(target_os = "macos")]
+            let (icon, mac) = (tauri::image::Image::from_bytes(include_bytes!("../icons/tray-template.png"))?, true);
+            #[cfg(not(target_os = "macos"))]
+            let (icon, mac) = (app.default_window_icon().unwrap().clone(), false);
             TrayIconBuilder::with_id("main")
-                .icon(app.default_window_icon().unwrap().clone())
+                .icon(icon)
+                .icon_as_template(mac)
                 .tooltip("Optimusic")
                 .menu(&menu)
-                .show_menu_on_left_click(false)
+                .show_menu_on_left_click(mac)
                 .on_menu_event(move |app, event| match event.id.as_ref() {
                     "toggle" => control(app, "toggle"),
                     "next" => control(app, "next"),
@@ -320,8 +333,11 @@ fn main() {
                     }
                     _ => {}
                 })
-                // Left-click toggles the window (Windows/macOS; Linux trays only show the menu)
-                .on_tray_icon_event(|tray, event| {
+                // Left-click toggles the window (Windows; Linux trays only show the menu)
+                .on_tray_icon_event(move |tray, event| {
+                    if mac {
+                        return;
+                    }
                     if let TrayIconEvent::Click {
                         button: MouseButton::Left,
                         button_state: MouseButtonState::Up,
@@ -361,6 +377,16 @@ fn main() {
                 _ => {}
             }
         })
-        .run(tauri::generate_context!())
-        .expect("error while running Optimusic");
+        .build(tauri::generate_context!())
+        .expect("error while running Optimusic")
+        .run(|app, event| match event {
+            // macOS: clicking the Dock icon brings the hidden window back
+            #[cfg(target_os = "macos")]
+            tauri::RunEvent::Reopen { .. } => show_window(app),
+            // Quit from the app menu / Cmd+Q must not be swallowed by hide-on-close
+            tauri::RunEvent::ExitRequested { .. } => {
+                app.state::<AppState>().quitting.store(true, Ordering::SeqCst);
+            }
+            _ => {}
+        });
 }

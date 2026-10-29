@@ -2,10 +2,10 @@
 
 # Optimusic
 
-**An unofficial, lightweight YouTube Music desktop app for Windows and Linux.**
+**An unofficial, lightweight YouTube Music desktop app for Windows, macOS and Linux.**
 
-Optimusic loads music.youtube.com in your system's own webview (WebView2 on Windows, WebKitGTK
-on Linux) instead of shipping a copy of Chromium like Electron apps do. It adds the desktop
+Optimusic loads music.youtube.com in your system's own webview (WebView2 on Windows, WebKit on
+macOS, WebKitGTK on Linux) instead of shipping a copy of Chromium like Electron apps do. It adds the desktop
 features a browser tab is missing: media keys, a tray player, and background playback. It also
 tunes the webview to use much less memory.
 
@@ -55,6 +55,35 @@ From the [latest release](https://github.com/ImCYMBIOT/optimusic/releases/latest
 - **Ubuntu / Debian:** `sudo apt install ./Optimusic_x.y.z_amd64.deb` (pulls in the GStreamer codecs it needs)
 - **Any distro:** the `.AppImage`; make it executable (`chmod +x Optimusic_*.AppImage`) and run it.
   It includes its own audio codecs.
+
+## Install (macOS) — untested, help wanted
+
+> **Heads up:** I don't have a Mac yet, so the macOS version is built automatically but has
+> **not been tested on a real Mac**. It should work (the code is the same as on Windows and
+> Linux), and I'll test it as soon as I can. If you try it, please
+> [open an issue](https://github.com/ImCYMBIOT/optimusic/issues) saying whether it worked, even
+> if it did. That helps a lot.
+
+1. Download `Optimusic_x.y.z_universal.dmg` from the
+   [latest release](https://github.com/ImCYMBIOT/optimusic/releases/latest). It runs on both
+   Apple silicon (M1 and later) and Intel Macs, macOS 10.15 or newer.
+2. Open the `.dmg` and drag **Optimusic** into **Applications**.
+3. Open Optimusic from Applications. The first time, macOS will block it, because the app isn't
+   signed with a paid Apple developer account yet. To allow it:
+   - Click **Done** (or **OK**) on the warning.
+   - Open **System Settings → Privacy & Security**, scroll down to the message about Optimusic,
+     and click **Open Anyway**. Enter your password if asked.
+   - Open Optimusic again and click **Open**. You only have to do this once.
+
+   If macOS says the app **"is damaged and can't be opened"**, it isn't; that's how macOS labels
+   unsigned downloads. Open **Terminal** and run:
+   ```bash
+   xattr -dr com.apple.quarantine /Applications/Optimusic.app
+   ```
+   then open it again.
+
+On macOS Optimusic lives in the menu bar (top right) instead of a tray, and clicking the Dock
+icon brings the window back after you close it.
 
 ## Build from source
 
