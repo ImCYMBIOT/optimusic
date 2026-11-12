@@ -112,7 +112,20 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ github.ref_name }}
     steps:
-      - env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/${{ needs.create-release.outputs.id }}" -F draft=false -f make_latest=true
+      # Copies with fixed names, so the README's
+      # releases/latest/download/Optimusic-Windows-Setup.exe links always get the newest version
+      - name: Add fixed-name copies
+        run: |
+          mkdir dl && cd dl
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY"             -p '*_x64-setup.exe' -p '*_x64_en-US.msi' -p '*_universal.dmg' -p '*_amd64.deb' -p '*_amd64.AppImage'
+          mv *_x64-setup.exe Optimusic-Windows-Setup.exe
+          mv *_x64_en-US.msi Optimusic-Windows.msi
+          mv *_universal.dmg Optimusic-macOS.dmg
+          mv *_amd64.deb Optimusic-Linux.deb
+          mv *_amd64.AppImage Optimusic-Linux.AppImage
+          gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" --clobber Optimusic-*
+      - run: gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/${{ needs.create-release.outputs.id }}" -F draft=false -f make_latest=true

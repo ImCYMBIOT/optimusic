@@ -13,6 +13,33 @@ tunes the webview to use much less memory.
 > or YouTube. YouTube Music is a trademark of Google LLC. You sign in to and use the real
 > YouTube Music website, under its terms.
 
+## Download
+
+| Platform | Download |
+|---|---|
+| **Windows** 10 / 11 | [**Installer (.exe)**](https://github.com/ImCYMBIOT/optimusic/releases/latest/download/Optimusic-Windows-Setup.exe) · [MSI](https://github.com/ImCYMBIOT/optimusic/releases/latest/download/Optimusic-Windows.msi) |
+| **Linux** | [**.deb** (Ubuntu / Debian)](https://github.com/ImCYMBIOT/optimusic/releases/latest/download/Optimusic-Linux.deb) · [**AppImage** (any distro)](https://github.com/ImCYMBIOT/optimusic/releases/latest/download/Optimusic-Linux.AppImage) |
+| **macOS** 10.15+ *(untested)* | [**.dmg** (Apple silicon + Intel)](https://github.com/ImCYMBIOT/optimusic/releases/latest/download/Optimusic-macOS.dmg) |
+
+These links always get the newest version. Older versions and release notes are on the
+[Releases page](https://github.com/ImCYMBIOT/optimusic/releases). Install steps for each platform
+are [below](#install-windows).
+
+## Screenshots
+
+<p align="center"><img src="docs/screenshots/home.webp" width="820" alt="Optimusic showing YouTube Music, with its palette button in the top bar"></p>
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/themes.webp" alt="Themes & extensions window: theme cards with colour previews"></td>
+    <td><img src="docs/screenshots/extensions.webp" alt="Extensions tab asking for confirmation before turning an extension on"></td>
+  </tr>
+  <tr>
+    <td align="center">Pick a theme; it applies instantly</td>
+    <td align="center">Extensions ask before they run</td>
+  </tr>
+</table>
+
 ## Why Optimusic
 Memory on Windows, measured with `bench.ps1` (private working set of the whole process tree,
 the same number Task Manager shows):
@@ -32,7 +59,7 @@ Your numbers will vary with your PC, your library and what's on screen.
 - **Media keys and OS media controls:** the Windows media overlay (SMTC), MPRIS on Linux
   (GNOME/KDE media widget), Now Playing on macOS
 - **Tray player:** now playing, play/pause, next, previous, show/hide, quit
-- **Discord Rich Presence:** "Listening to Optimusic" with the song, artist, cover art, a
+- **Discord Rich Presence:** "Listening to Optimusic (for YouTube Music)" with the song, artist, cover art, a
   progress bar, and "Listen on YouTube Music" and "Get Optimusic" buttons. Cleared when you pause, idle when Discord
   isn't running, and switchable from the tray ("Show on Discord")
 - **Background playback:** closing the window hides it to the tray and the music keeps playing
@@ -45,21 +72,21 @@ Your numbers will vary with your PC, your library and what's on screen.
 - **Single instance:** launching it again just brings the window back
 - Remembers window size and position
 - External links open in your normal browser; Google sign-in stays in the app
-- **Locked down:** the YouTube Music page can call exactly one app command (`track_update`), nothing else
+- **Locked down:** the YouTube Music page can only report what's playing and open the settings
+  window; it can't change settings, turn on extensions or touch anything else
 
 ## Install (Windows)
-Download an installer from the [latest release](https://github.com/ImCYMBIOT/optimusic/releases/latest):
-- `Optimusic_x.y.z_x64-setup.exe`: installs just for you, no admin needed
-- `Optimusic_x.y.z_x64_en-US.msi`: standard MSI installer
+- [**Optimusic-Windows-Setup.exe**](https://github.com/ImCYMBIOT/optimusic/releases/latest/download/Optimusic-Windows-Setup.exe): installs just for you, no admin needed (recommended)
+- [**Optimusic-Windows.msi**](https://github.com/ImCYMBIOT/optimusic/releases/latest/download/Optimusic-Windows.msi): standard MSI installer
 
 WebView2 is built into Windows 10 and 11; the installer downloads it if it's missing. The
 installers aren't code-signed yet, so SmartScreen may warn the first time (More info → Run anyway).
 
 ## Install (Linux)
-From the [latest release](https://github.com/ImCYMBIOT/optimusic/releases/latest):
-- **Ubuntu / Debian:** `sudo apt install ./Optimusic_x.y.z_amd64.deb` (pulls in the GStreamer codecs it needs)
-- **Any distro:** the `.AppImage`; make it executable (`chmod +x Optimusic_*.AppImage`) and run it.
-  It includes its own audio codecs.
+- **Ubuntu / Debian:** download [**Optimusic-Linux.deb**](https://github.com/ImCYMBIOT/optimusic/releases/latest/download/Optimusic-Linux.deb), then
+  `sudo apt install ./Optimusic-Linux.deb` (pulls in the GStreamer codecs it needs)
+- **Any distro:** download [**Optimusic-Linux.AppImage**](https://github.com/ImCYMBIOT/optimusic/releases/latest/download/Optimusic-Linux.AppImage), make it
+  executable (`chmod +x Optimusic-Linux.AppImage`) and run it. It includes its own audio codecs.
 
 ## Install (macOS) — untested, help wanted
 
@@ -69,9 +96,8 @@ From the [latest release](https://github.com/ImCYMBIOT/optimusic/releases/latest
 > [open an issue](https://github.com/ImCYMBIOT/optimusic/issues) saying whether it worked, even
 > if it did. That helps a lot.
 
-1. Download `Optimusic_x.y.z_universal.dmg` from the
-   [latest release](https://github.com/ImCYMBIOT/optimusic/releases/latest). It runs on both
-   Apple silicon (M1 and later) and Intel Macs, macOS 10.15 or newer.
+1. Download [**Optimusic-macOS.dmg**](https://github.com/ImCYMBIOT/optimusic/releases/latest/download/Optimusic-macOS.dmg). It runs on both Apple silicon
+   (M1 and later) and Intel Macs, macOS 10.15 or newer.
 2. Open the `.dmg` and drag **Optimusic** into **Applications**.
 3. Open Optimusic from Applications. The first time, macOS will block it, because the app isn't
    signed with a paid Apple developer account yet. To allow it:
