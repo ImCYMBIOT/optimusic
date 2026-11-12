@@ -1,32 +1,22 @@
-> **Coming from v0.2.x or earlier?** Install this version by hand one last time (downloads below). From v0.3.0 on, Optimusic can update itself.
+## New: themes and extensions
+Restyle YouTube Music and add small features, a bit like Spicetify for Spotify. Open **Themes & extensions** from the new palette button in YouTube Music's top bar, with **Ctrl+,** (Cmd+, on Mac), or from the tray.
 
-## New: updates your way
-Choose in the tray (menu bar on macOS) → **Updates**:
-- **Off**: never checks, no update requests at all
-- **Notify me** (default): checks at start-up and every 6 hours. An **Update to vX** item appears in the tray menu, and nothing downloads until you click it
-- **Install automatically**: installs new versions the next time you start Optimusic, before any music plays
+- **Built-in themes:** AMOLED Black (true black) and Optimusic Violet (violet instead of red accents). They apply instantly, and the window stays open so you can try a few.
+- **Hide upgrade prompts:** a separate switch that hides the "Upgrade" entry and "Try Premium" pop-ups. It doesn't touch ads.
+- **Your own themes:** drop a `.css` file into the themes folder.
+- **Extensions:** drop a `.js` file into the extensions folder. Each one is off until you turn it on, and Optimusic asks you to confirm first, because extensions run while you're signed in to Google.
 
-Every update is signed, and Optimusic refuses any update that isn't.
+Themes and extensions only ever run on music.youtube.com, never on Google's sign-in pages, and the YouTube Music page can only *open* the settings window, never change your settings. There's a sample theme and extension in the [`examples`](https://github.com/ImCYMBIOT/optimusic/tree/main/examples) folder.
 
-## New: macOS (untested, help wanted)
-There's now a Mac version for Apple silicon and Intel Macs (macOS 10.15+). **I don't have a Mac yet, so it hasn't been tested on one.** It builds cleanly and should work; I'll test it as soon as I can. If you try it, please [open an issue](https://github.com/ImCYMBIOT/optimusic/issues) saying whether it worked.
+## This release is Windows only
+GitHub's build servers are unavailable on this account for now, so v0.4.0 was built for Windows only. **Linux and macOS stay on [v0.3.0](https://github.com/ImCYMBIOT/optimusic/releases/tag/v0.3.0)** until the next full release.
 
-The app isn't signed by Apple yet, so macOS blocks it the first time: open **System Settings → Privacy & Security** and click **Open Anyway**. If it says the app "is damaged", run `xattr -dr com.apple.quarantine /Applications/Optimusic.app` in Terminal. Full steps are in the [README](https://github.com/ImCYMBIOT/optimusic#install-macos--untested-help-wanted).
+## Download (Windows)
+- **`Optimusic-Windows-Setup.exe`**: installs just for you, no admin needed (recommended)
+- **`Optimusic-Windows.msi`**: standard MSI installer
 
-## Also
-- Builds for every platform now come from GitHub Actions, never a personal machine
-- Quitting from the app menu (Cmd+Q on Mac) now really quits instead of hiding to the tray
+Already on v0.3.0? With updates set to Notify me, **Update to v0.4.0** appears in your tray menu.
 
-## Downloads
-| Platform | File |
-|---|---|
-| Windows | `Optimusic_0.3.0_x64-setup.exe` (recommended, no admin needed) or `Optimusic_0.3.0_x64_en-US.msi` |
-| macOS | `Optimusic_0.3.0_universal.dmg` |
-| Ubuntu / Debian | `Optimusic_0.3.0_amd64.deb`: `sudo apt install ./Optimusic_0.3.0_amd64.deb` |
-| Other Linux | `Optimusic_0.3.0_amd64.AppImage`: `chmod +x` it and run |
+The installers aren't code-signed yet, so SmartScreen may warn the first time: click **More info → Run anyway**.
 
-Files ending in `.sig` and `latest.json` are for the updater; you don't need them.
-
-Windows installers aren't code-signed yet, so SmartScreen may warn the first time: click **More info → Run anyway**.
-
-Not affiliated with, endorsed by, or sponsored by Google, YouTube, Apple or Discord.
+Not affiliated with, endorsed by, or sponsored by Google, YouTube or Discord.

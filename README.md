@@ -20,10 +20,11 @@ tunes the webview to use much less memory.
 | Platform | Download |
 |---|---|
 | **Windows** 10 / 11 | [**Installer (.exe)**](https://github.com/ImCYMBIOT/optimusic/releases/latest/download/Optimusic-Windows-Setup.exe) · [MSI](https://github.com/ImCYMBIOT/optimusic/releases/latest/download/Optimusic-Windows.msi) |
-| **Linux** | [**.deb** (Ubuntu / Debian)](https://github.com/ImCYMBIOT/optimusic/releases/latest/download/Optimusic-Linux.deb) · [**AppImage** (any distro)](https://github.com/ImCYMBIOT/optimusic/releases/latest/download/Optimusic-Linux.AppImage) |
-| **macOS** 10.15+ *(untested)* | [**.dmg** (Apple silicon + Intel)](https://github.com/ImCYMBIOT/optimusic/releases/latest/download/Optimusic-macOS.dmg) |
+| **Linux** | [**.deb** (Ubuntu / Debian)](https://github.com/ImCYMBIOT/optimusic/releases/download/v0.3.0/Optimusic-Linux.deb) · [**AppImage** (any distro)](https://github.com/ImCYMBIOT/optimusic/releases/download/v0.3.0/Optimusic-Linux.AppImage) |
+| **macOS** 10.15+ *(untested)* | [**.dmg** (Apple silicon + Intel)](https://github.com/ImCYMBIOT/optimusic/releases/download/v0.3.0/Optimusic-macOS.dmg) |
 
-These links always get the newest version. Older versions and release notes are on the
+These links always get the newest version. (v0.4.0 is Windows only; Linux and macOS links point to
+v0.3.0 until the next full release.) Older versions and release notes are on the
 [Releases page](https://github.com/ImCYMBIOT/optimusic/releases). Install steps for each platform
 are [below](#install-windows).
 
@@ -85,9 +86,9 @@ WebView2 is built into Windows 10 and 11; the installer downloads it if it's mis
 installers aren't code-signed yet, so SmartScreen may warn the first time (More info → Run anyway).
 
 ## Install (Linux)
-- **Ubuntu / Debian:** download [**Optimusic-Linux.deb**](https://github.com/ImCYMBIOT/optimusic/releases/latest/download/Optimusic-Linux.deb), then
+- **Ubuntu / Debian:** download [**Optimusic-Linux.deb**](https://github.com/ImCYMBIOT/optimusic/releases/download/v0.3.0/Optimusic-Linux.deb), then
   `sudo apt install ./Optimusic-Linux.deb` (pulls in the GStreamer codecs it needs)
-- **Any distro:** download [**Optimusic-Linux.AppImage**](https://github.com/ImCYMBIOT/optimusic/releases/latest/download/Optimusic-Linux.AppImage), make it
+- **Any distro:** download [**Optimusic-Linux.AppImage**](https://github.com/ImCYMBIOT/optimusic/releases/download/v0.3.0/Optimusic-Linux.AppImage), make it
   executable (`chmod +x Optimusic-Linux.AppImage`) and run it. It includes its own audio codecs.
 
 ## Install (macOS) — untested, help wanted
@@ -98,7 +99,7 @@ installers aren't code-signed yet, so SmartScreen may warn the first time (More 
 > [open an issue](https://github.com/ImCYMBIOT/optimusic/issues) saying whether it worked, even
 > if it did. That helps a lot.
 
-1. Download [**Optimusic-macOS.dmg**](https://github.com/ImCYMBIOT/optimusic/releases/latest/download/Optimusic-macOS.dmg). It runs on both Apple silicon
+1. Download [**Optimusic-macOS.dmg**](https://github.com/ImCYMBIOT/optimusic/releases/download/v0.3.0/Optimusic-macOS.dmg). It runs on both Apple silicon
    (M1 and later) and Intel Macs, macOS 10.15 or newer.
 2. Open the `.dmg` and drag **Optimusic** into **Applications**.
 3. Open Optimusic from Applications. The first time, macOS will block it, because the app isn't
