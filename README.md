@@ -4,6 +4,8 @@
 
 **An unofficial, lightweight YouTube Music desktop app for Windows, macOS and Linux.**
 
+**Website:** [imcymbiot.github.io/optimusic](https://imcymbiot.github.io/optimusic/)
+
 Optimusic loads music.youtube.com in your system's own webview (WebView2 on Windows, WebKit on
 macOS, WebKitGTK on Linux) instead of shipping a copy of Chromium like Electron apps do. It adds the desktop
 features a browser tab is missing: media keys, a tray player, and background playback. It also
@@ -260,6 +262,7 @@ src-tauri/
   tauri.conf.json
 dist/settings.html     the Themes & extensions window
 examples/              a sample theme and extension
+site/                  the website (GitHub Pages), plain HTML and CSS
 .github/workflows/     release builds for Windows, Linux and macOS
 bench.ps1              Windows CPU/memory benchmark for a whole process tree
 ```
