@@ -1,22 +1,27 @@
-## New: themes and extensions
-Restyle YouTube Music and add small features, a bit like Spicetify for Spotify. Open **Themes & extensions** from the new palette button in YouTube Music's top bar, with **Ctrl+,** (Cmd+, on Mac), or from the tray.
+## Themes and extensions, now on every platform
+v0.4.0 came out for Windows only. **v0.4.1 brings the same features to Linux and macOS**, and all three platforms are back in step.
 
-- **Built-in themes:** AMOLED Black (true black) and Optimusic Violet (violet instead of red accents). They apply instantly, and the window stays open so you can try a few.
-- **Hide upgrade prompts:** a separate switch that hides the "Upgrade" entry and "Try Premium" pop-ups. It doesn't touch ads.
-- **Your own themes:** drop a `.css` file into the themes folder.
-- **Extensions:** drop a `.js` file into the extensions folder. Each one is off until you turn it on, and Optimusic asks you to confirm first, because extensions run while you're signed in to Google.
+If you're on Windows and already have v0.4.0, there's nothing new for you in this one; it just matches the version number.
 
-Themes and extensions only ever run on music.youtube.com, never on Google's sign-in pages, and the YouTube Music page can only *open* the settings window, never change your settings. There's a sample theme and extension in the [`examples`](https://github.com/ImCYMBIOT/optimusic/tree/main/examples) folder.
+### What's in it
+- **Themes & extensions window:** open it from the palette button in YouTube Music's top bar, with **Ctrl+,** (Cmd+, on Mac), or from the tray. Changes apply instantly.
+- **Built-in themes:** AMOLED Black and Optimusic Violet, plus a **Hide upgrade prompts** switch (it doesn't touch ads).
+- **Your own themes and extensions:** drop `.css` or `.js` files into their folders. Extensions are off until you turn them on, and Optimusic asks you to confirm first. Samples are in the [`examples`](https://github.com/ImCYMBIOT/optimusic/tree/main/examples) folder.
 
-## This release is Windows only
-GitHub's build servers are unavailable on this account for now, so v0.4.0 was built for Windows only. **Linux and macOS stay on [v0.3.0](https://github.com/ImCYMBIOT/optimusic/releases/tag/v0.3.0)** until the next full release.
+Themes and extensions only ever run on music.youtube.com, never on Google's sign-in pages.
 
-## Download (Windows)
-- **`Optimusic-Windows-Setup.exe`**: installs just for you, no admin needed (recommended)
-- **`Optimusic-Windows.msi`**: standard MSI installer
+## Downloads
+| Platform | File |
+|---|---|
+| Windows | `Optimusic-Windows-Setup.exe` (recommended, no admin needed) or `Optimusic-Windows.msi` |
+| macOS *(untested)* | `Optimusic-macOS.dmg`, for Apple silicon and Intel |
+| Ubuntu / Debian | `Optimusic-Linux.deb`: `sudo apt install ./Optimusic-Linux.deb` |
+| Other Linux | `Optimusic-Linux.AppImage`: `chmod +x` it and run |
 
-Already on v0.3.0? With updates set to Notify me, **Update to v0.4.0** appears in your tray menu.
+The same files are also here with the version in their names. Files ending in `.sig`, `.tar.gz` and `latest.json` are for the updater; you don't need them.
 
-The installers aren't code-signed yet, so SmartScreen may warn the first time: click **More info → Run anyway**.
+Already on v0.3.0 or later? With updates set to Notify me, **Update to v0.4.1** appears in your tray menu.
 
-Not affiliated with, endorsed by, or sponsored by Google, YouTube or Discord.
+The installers aren't code-signed yet: on Windows, SmartScreen may warn the first time (More info → Run anyway); on macOS, open System Settings → Privacy & Security and click Open Anyway.
+
+Not affiliated with, endorsed by, or sponsored by Google, YouTube, Apple or Discord.
