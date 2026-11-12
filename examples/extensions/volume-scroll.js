@@ -1,6 +1,6 @@
 // Optimusic extension: scroll the mouse wheel over the player bar to change the volume.
-// To use it, copy this file into Optimusic's extensions folder (tray → Extensions →
-// Open extensions folder), then tray → Extensions → Refresh list, and tick it.
+// To use it, open Themes & extensions (Ctrl+,) → Extensions → Open extensions folder, copy this
+// file there, and switch it on.
 const STEP = 5;
 
 document.addEventListener(

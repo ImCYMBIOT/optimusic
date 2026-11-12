@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-customize-state"
+description = "Enables the customize_state command without any pre-configured scope."
+commands.allow = ["customize_state"]
+
+[[permission]]
+identifier = "deny-customize-state"
+description = "Denies the customize_state command without any pre-configured scope."
+commands.deny = ["customize_state"]

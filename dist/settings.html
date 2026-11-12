@@ -1,0 +1,345 @@
+<!doctype html>
+<!-- Optimusic's Themes & extensions window. Bundled with the app; it talks to Rust through the
+     commands in customize.rs, which only this page is allowed to call (capabilities/settings.json). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Themes & extensions</title>
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface-2: #232323;
+    --line: #2e2e2e;
+    --text: #f1f1f1;
+    --muted: #a3a3a3;
+    --accent: #8b5cf6;
+    --accent-soft: rgba(139, 92, 246, 0.16);
+    --warn: #f5b84b;
+    --warn-soft: rgba(245, 184, 75, 0.1);
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 14px/1.45 "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 0 24px;
+    height: 60px;
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; }
+  .brand svg { width: 26px; height: 26px; }
+  nav { display: flex; gap: 4px; height: 100%; }
+  nav button {
+    all: unset;
+    cursor: pointer;
+    padding: 0 14px;
+    color: var(--muted);
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+    display: flex;
+    align-items: center;
+  }
+  nav button:hover { color: var(--text); }
+  nav button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
+  nav button:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; border-radius: 6px; }
+  main { flex: 1; overflow-y: auto; padding: 24px; }
+  section[hidden] { display: none; }
+  h2 { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin: 0 0 12px; }
+  p.lead { color: var(--muted); margin: 0 0 20px; max-width: 560px; }
+
+  /* Theme cards */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+  .card {
+    all: unset;
+    cursor: pointer;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: border-color .12s, transform .12s;
+  }
+  .card:hover { border-color: #444; transform: translateY(-1px); }
+  .card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .card[aria-checked="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .preview { height: 96px; position: relative; display: grid; grid-template-columns: 22% 1fr; grid-template-rows: 14px 1fr 16px; }
+  .preview .top { grid-column: 1 / 3; }
+  .preview .side { border-right: 1px solid rgba(255,255,255,.04); }
+  .preview .content { padding: 8px; display: flex; gap: 6px; }
+  .preview .tile { flex: 1; border-radius: 4px; }
+  .preview .bar { grid-column: 1 / 3; position: relative; }
+  .preview .progress { position: absolute; left: 0; top: 0; height: 2px; width: 42%; }
+  .preview.custom { display: flex; align-items: center; justify-content: center; background: repeating-linear-gradient(45deg, #1d1d1d, #1d1d1d 8px, #222 8px, #222 16px); color: var(--muted); font-size: 22px; }
+  .card .info { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 2px; }
+  .card .name { font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .card .desc { color: var(--muted); font-size: 12.5px; }
+  .badge { font-size: 10.5px; font-weight: 600; padding: 1px 6px; border-radius: 99px; background: var(--surface-2); color: var(--muted); }
+  .check { margin-left: auto; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); display: none; align-items: center; justify-content: center; }
+  .card[aria-checked="true"] .check { display: flex; }
+
+  /* Rows with switches */
+  .rows { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+  .row { display: flex; align-items: center; gap: 16px; padding: 14px 16px; }
+  .row + .row { border-top: 1px solid var(--line); }
+  .row .text { flex: 1; min-width: 0; }
+  .row .title { font-weight: 600; }
+  .row .sub { color: var(--muted); font-size: 12.5px; overflow-wrap: anywhere; }
+  .switch {
+    all: unset;
+    cursor: pointer;
+    flex-shrink: 0;
+    width: 40px; height: 22px;
+    border-radius: 99px;
+    background: #3a3a3a;
+    position: relative;
+    transition: background .15s;
+  }
+  .switch::after {
+    content: ""; position: absolute; top: 3px; left: 3px;
+    width: 16px; height: 16px; border-radius: 50%; background: #fff;
+    transition: transform .15s;
+  }
+  .switch[aria-checked="true"] { background: var(--accent); }
+  .switch[aria-checked="true"]::after { transform: translateX(18px); }
+  .switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .block { margin-top: 28px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+  .hint { color: var(--muted); font-size: 12.5px; margin-right: auto; }
+  .btn {
+    all: unset; cursor: pointer;
+    padding: 7px 14px; border-radius: 8px;
+    background: var(--surface-2); border: 1px solid var(--line);
+    font-weight: 500; font-size: 13px;
+  }
+  .btn:hover { background: #2c2c2c; }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { background: #7c4dee; }
+
+  .notice { display: flex; gap: 12px; padding: 12px 14px; border-radius: 10px; margin-bottom: 18px; font-size: 13px; }
+  .notice.warn { background: var(--warn-soft); border: 1px solid rgba(245,184,75,.28); }
+  .notice.warn svg { color: var(--warn); flex-shrink: 0; margin-top: 1px; }
+  .notice.info { background: var(--accent-soft); border: 1px solid rgba(139,92,246,.35); align-items: center; }
+  .notice.info .text { flex: 1; }
+  .empty { text-align: center; padding: 36px 16px; color: var(--muted); }
+  .empty .big { font-size: 15px; color: var(--text); font-weight: 600; margin-bottom: 6px; }
+  code { font: 12.5px ui-monospace, "Cascadia Code", Consolas, monospace; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+
+  /* Confirm dialog */
+  dialog {
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--line); border-radius: 14px;
+    padding: 22px; max-width: 420px; width: calc(100% - 32px);
+  }
+  dialog::backdrop { background: rgba(0,0,0,.6); }
+  dialog h3 { margin: 0 0 8px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+  dialog h3 svg { color: var(--warn); }
+  dialog p { margin: 0 0 10px; color: var(--muted); }
+  dialog .actions { justify-content: flex-end; margin-top: 18px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c3aed"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs>
+      <rect x="3" y="3" width="58" height="58" rx="15" fill="url(#g)"/>
+      <g fill="#fff"><rect x="13" y="25" width="5" height="14" rx="2.5"/><rect x="22" y="18" width="5" height="28" rx="2.5"/><rect x="31" y="22" width="5" height="20" rx="2.5"/><rect x="40" y="14" width="5" height="36" rx="2.5"/><rect x="49" y="24" width="5" height="16" rx="2.5"/></g>
+    </svg>
+    Optimusic
+  </div>
+  <nav role="tablist">
+    <button role="tab" id="tab-themes" aria-controls="themes" aria-selected="true">Themes</button>
+    <button role="tab" id="tab-extensions" aria-controls="extensions" aria-selected="false">Extensions</button>
+  </nav>
+</header>
+
+<main>
+  <section id="themes" role="tabpanel" aria-labelledby="tab-themes">
+    <p class="lead">Pick a look for YouTube Music. It changes right away, so try a few.</p>
+    <div class="grid" id="theme-grid" role="radiogroup" aria-label="Theme"></div>
+
+    <div class="block">
+      <h2>Tweaks</h2>
+      <div class="rows">
+        <div class="row">
+          <div class="text">
+            <div class="title">Hide upgrade prompts</div>
+            <div class="sub">Hides the "Upgrade" entry and "Try Premium" pop-ups. Works with any theme. Doesn't affect ads.</div>
+          </div>
+          <button class="switch" id="promos" role="switch" aria-checked="false" aria-label="Hide upgrade prompts"></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions block">
+      <span class="hint">Make your own: put a <code>.css</code> file in the themes folder.</span>
+      <button class="btn" data-open="themes">Open themes folder</button>
+      <button class="btn" data-refresh>Refresh</button>
+    </div>
+  </section>
+
+  <section id="extensions" role="tabpanel" aria-labelledby="tab-extensions" hidden>
+    <div class="notice warn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <div>Extensions run inside YouTube Music while you're signed in to Google, so a bad one could act on your account. Only turn on extensions you wrote or got from someone you trust.</div>
+    </div>
+    <div class="notice info" id="reload-notice" hidden>
+      <div class="text">An extension was turned off. Reload YouTube Music to finish.</div>
+      <button class="btn primary" id="reload">Reload now</button>
+    </div>
+    <div id="ext-list"></div>
+    <div class="actions block">
+      <span class="hint">Add one: put a <code>.js</code> file in the extensions folder.</span>
+      <button class="btn" data-open="extensions">Open extensions folder</button>
+      <button class="btn" data-refresh>Refresh</button>
+    </div>
+  </section>
+</main>
+
+<dialog id="confirm">
+  <h3>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <span>Turn on <span id="confirm-name"></span>?</span>
+  </h3>
+  <p>It will run inside YouTube Music while you're signed in to your Google account. A malicious extension could act on your account.</p>
+  <p>Only continue if you wrote it yourself or trust where it came from.</p>
+  <div class="actions">
+    <button class="btn" value="cancel" id="confirm-cancel">Cancel</button>
+    <button class="btn primary" value="ok" id="confirm-ok">Turn on</button>
+  </div>
+</dialog>
+
+<script>
+  const invoke = (cmd, args) => window.__TAURI_INTERNALS__.invoke(cmd, args);
+  const $ = (id) => document.getElementById(id);
+  let state = null;
+
+  // Tabs (remember the last one)
+  const tabs = document.querySelectorAll('[role="tab"]');
+  function showTab(id) {
+    tabs.forEach((t) => {
+      const on = t.getAttribute("aria-controls") === id;
+      t.setAttribute("aria-selected", on);
+      $(t.getAttribute("aria-controls")).hidden = !on;
+    });
+    try { localStorage.setItem("tab", id); } catch {}
+  }
+  tabs.forEach((t) => t.addEventListener("click", () => showTab(t.getAttribute("aria-controls"))));
+  try { const saved = localStorage.getItem("tab"); if (saved) showTab(saved); } catch {}
+
+  function el(tag, props = {}, ...children) {
+    const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(props)) {
+      if (k === "class") e.className = v;
+      else if (k === "style") e.style.cssText = v;
+      else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+      else e.setAttribute(k, v);
+    }
+    for (const c of children) if (c != null) e.append(c);
+    return e;
+  }
+
+  function preview(colors) {
+    if (!colors) return el("div", { class: "preview custom", "aria-hidden": "true" }, "{ }");
+    const [bg, surface, accent] = colors;
+    return el("div", { class: "preview", style: `background:${bg}`, "aria-hidden": "true" },
+      el("div", { class: "top", style: `background:${bg};border-bottom:1px solid rgba(255,255,255,.05)` }),
+      el("div", { class: "side", style: `background:${bg}` }),
+      el("div", { class: "content" },
+        el("div", { class: "tile", style: `background:${surface}` }),
+        el("div", { class: "tile", style: `background:${surface}` }),
+        el("div", { class: "tile", style: `background:${surface}` })),
+      el("div", { class: "bar", style: `background:${surface}` },
+        el("div", { class: "progress", style: `background:${accent}` })));
+  }
+
+  const checkmark = () => {
+    const s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    s.setAttribute("width", "12"); s.setAttribute("height", "12"); s.setAttribute("viewBox", "0 0 24 24");
+    s.innerHTML = '<path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>';
+    return s;
+  };
+
+  function render() {
+    const grid = $("theme-grid");
+    grid.replaceChildren(...state.themes.map((t) =>
+      el("button", {
+        class: "card", role: "radio", "aria-checked": t.id === state.theme,
+        onclick: () => act("set_theme", { id: t.id }),
+      },
+        preview(t.preview),
+        el("div", { class: "info" },
+          el("div", { class: "name" }, t.name, t.builtin ? null : el("span", { class: "badge" }, "Custom"),
+            el("span", { class: "check" }, checkmark())),
+          t.description ? el("div", { class: "desc" }, t.description) : null))));
+
+    $("promos").setAttribute("aria-checked", state.hidePromos);
+    $("reload-notice").hidden = !state.needsReload;
+
+    const list = $("ext-list");
+    if (!state.extensions.length) {
+      list.replaceChildren(el("div", { class: "rows" }, el("div", { class: "empty" },
+        el("div", { class: "big" }, "No extensions yet"),
+        el("div", {}, "Put a .js file in the extensions folder, then click Refresh. There's an example in the examples folder of the Optimusic repo on GitHub."))));
+    } else {
+      list.replaceChildren(el("div", { class: "rows" }, ...state.extensions.map((x) =>
+        el("div", { class: "row" },
+          el("div", { class: "text" },
+            el("div", { class: "title" }, x.name),
+            el("div", { class: "sub" }, x.description || x.file)),
+          el("button", {
+            class: "switch", role: "switch", "aria-checked": x.enabled, "aria-label": `Turn on ${x.name}`,
+            onclick: () => toggleExtension(x),
+          })))));
+    }
+  }
+
+  async function act(cmd, args) {
+    state = await invoke(cmd, args);
+    render();
+  }
+  const refresh = () => act("customize_state");
+
+  $("promos").addEventListener("click", () => act("set_hide_promos", { hide: !state.hidePromos }));
+  $("reload").addEventListener("click", async () => { await invoke("reload_music_page"); refresh(); });
+  document.querySelectorAll("[data-open]").forEach((b) =>
+    b.addEventListener("click", () => invoke("open_customize_folder", { kind: b.dataset.open })));
+  document.querySelectorAll("[data-refresh]").forEach((b) => b.addEventListener("click", refresh));
+  // Coming back after dropping files into a folder: pick them up without a click.
+  window.addEventListener("focus", refresh);
+
+  function toggleExtension(x) {
+    if (x.enabled) return act("set_extension", { file: x.file, enabled: false });
+    const dlg = $("confirm");
+    $("confirm-name").textContent = x.name;
+    dlg.returnValue = "";
+    dlg.showModal();
+    $("confirm-cancel").focus();
+    dlg.onclose = () => {
+      if (dlg.returnValue === "ok") act("set_extension", { file: x.file, enabled: true });
+    };
+  }
+  $("confirm-ok").addEventListener("click", () => $("confirm").close("ok"));
+  $("confirm-cancel").addEventListener("click", () => $("confirm").close("cancel"));
+
+  refresh();
+</script>
+</body>
+</html>

@@ -3,24 +3,37 @@
 //! - One theme at a time: a built-in one or any `.css` file in the themes folder.
 //! - "Hide upgrade prompts" is its own toggle, so it works with any theme.
 //! - Extensions are `.js` files in the extensions folder. Each is off by default and switched
-//!   on separately; they run inside the signed-in page, so turning one on asks first.
+//!   on separately; they run inside the signed-in page, so the settings page asks first.
 //!
-//! Both folders live in the app's config folder, and the tray has items to open them.
-//! bridge.js does the in-page work, and only on music.youtube.com.
+//! The settings window (dist/settings.html, its own capability) is the only page that can call
+//! the commands below; music.youtube.com can only open it. bridge.js does the in-page work, and
+//! only on music.youtube.com.
 
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
 use serde::{Deserialize, Serialize};
-use tauri::menu::{CheckMenuItem, MenuItem, PredefinedMenuItem, Submenu};
-use tauri::{AppHandle, Manager, WebviewWindow, Wry};
-use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
+use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 use tauri_plugin_opener::OpenerExt;
 
-const BUILTIN: [(&str, &str, &str); 2] = [
-    ("amoled", "AMOLED Black", include_str!("../themes/amoled.css")),
-    ("violet", "Optimusic Violet", include_str!("../themes/violet.css")),
+/// (id, name, description, preview colours: background, surface, accent, CSS)
+const BUILTIN: [(&str, &str, &str, [&str; 3], &str); 2] = [
+    (
+        "amoled",
+        "AMOLED Black",
+        "True black everywhere. Saves power on OLED screens.",
+        ["#000000", "#0a0a0a", "#ff4e45"],
+        include_str!("../themes/amoled.css"),
+    ),
+    (
+        "violet",
+        "Optimusic Violet",
+        "Violet instead of red for the progress bar, links and highlights.",
+        ["#030303", "#212121", "#a78bfa"],
+        include_str!("../themes/violet.css"),
+    ),
 ];
+const DEFAULT_PREVIEW: [&str; 3] = ["#030303", "#212121", "#ff0000"];
 const NO_PROMOS: &str = include_str!("../themes/no-upgrade-prompts.css");
 /// Bigger files are ignored; no theme or extension needs a megabyte.
 const MAX_FILE: u64 = 1 << 20;
@@ -35,14 +48,15 @@ struct Settings {
     extensions: Vec<String>,
 }
 
+#[derive(Default)]
 pub struct Customize {
     settings: Mutex<Settings>,
-    themes_menu: Submenu<Wry>,
-    extensions_menu: Submenu<Wry>,
-    theme_items: Mutex<Vec<(String, CheckMenuItem<Wry>)>>,
-    extension_items: Mutex<Vec<(String, CheckMenuItem<Wry>)>>,
-    promos_item: CheckMenuItem<Wry>,
-    reload_item: MenuItem<Wry>,
+    /// An extension was turned off; it's only gone once YouTube Music reloads.
+    needs_reload: Mutex<bool>,
+}
+
+pub fn manage(app: &AppHandle) {
+    app.manage(Customize { settings: Mutex::new(load(app)), ..Default::default() });
 }
 
 /// The script injected before YouTube Music's own: bridge.js plus the saved theme, so the
@@ -52,166 +66,195 @@ pub fn init_script(app: &AppHandle, bridge: &str) -> String {
     format!("{bridge}\nwindow.__optimusic && window.__optimusic.setTheme({});", json(&css))
 }
 
-/// Creates the Themes and Extensions submenus for the tray.
-pub fn menus(app: &AppHandle) -> tauri::Result<(Submenu<Wry>, Submenu<Wry>)> {
-    let settings = load(app);
-    let themes_menu = Submenu::new(app, "Themes", true)?;
-    let extensions_menu = Submenu::new(app, "Extensions", true)?;
-    let promos_item = CheckMenuItem::with_id(
-        app,
-        "promos-toggle",
-        "Hide upgrade prompts",
-        true,
-        settings.hide_promos,
-        None::<&str>,
-    )?;
-    let reload_item = MenuItem::with_id(app, "page-reload", "Reload page", true, None::<&str>)?;
-    app.manage(Customize {
-        settings: Mutex::new(settings),
-        themes_menu: themes_menu.clone(),
-        extensions_menu: extensions_menu.clone(),
-        theme_items: Mutex::new(Vec::new()),
-        extension_items: Mutex::new(Vec::new()),
-        promos_item,
-        reload_item,
-    });
-    fill(app)?;
-    Ok((themes_menu, extensions_menu))
-}
-
-/// (Re)builds both submenus from the built-ins and whatever is in the folders now.
-fn fill(app: &AppHandle) -> tauri::Result<()> {
-    let c = app.state::<Customize>();
-    let settings = c.settings.lock().unwrap().clone();
-    for menu in [&c.themes_menu, &c.extensions_menu] {
-        for item in menu.items()? {
-            menu.remove(&item)?;
-        }
-    }
-
-    let mut themes = vec![("".to_string(), "Default".to_string())];
-    themes.extend(BUILTIN.iter().map(|(id, name, _)| (format!("builtin:{id}"), name.to_string())));
-    themes.extend(files(&folder(app, "themes"), "css").into_iter().map(|f| {
-        let name = Path::new(&f).file_stem().unwrap().to_string_lossy().into_owned();
-        (format!("file:{f}"), name)
-    }));
-    let mut theme_items = Vec::new();
-    for (id, name) in themes {
-        let item = CheckMenuItem::with_id(app, format!("theme:{id}"), name, true, id == settings.theme, None::<&str>)?;
-        c.themes_menu.append(&item)?;
-        theme_items.push((id, item));
-    }
-    c.themes_menu.append(&PredefinedMenuItem::separator(app)?)?;
-    c.themes_menu.append(&c.promos_item)?;
-    c.themes_menu.append(&PredefinedMenuItem::separator(app)?)?;
-    c.themes_menu.append(&MenuItem::with_id(app, "themes-open", "Open themes folder", true, None::<&str>)?)?;
-    c.themes_menu.append(&MenuItem::with_id(app, "themes-rescan", "Refresh list", true, None::<&str>)?)?;
-    *c.theme_items.lock().unwrap() = theme_items;
-
-    let mut extension_items = Vec::new();
-    let found = files(&folder(app, "extensions"), "js");
-    if found.is_empty() {
-        c.extensions_menu.append(&MenuItem::with_id(app, "ext-none", "No extensions yet", false, None::<&str>)?)?;
-    }
-    for f in found {
-        let name = Path::new(&f).file_stem().unwrap().to_string_lossy().into_owned();
-        let on = settings.extensions.contains(&f);
-        let item = CheckMenuItem::with_id(app, format!("ext:{f}"), name, true, on, None::<&str>)?;
-        c.extensions_menu.append(&item)?;
-        extension_items.push((f, item));
-    }
-    c.extensions_menu.append(&PredefinedMenuItem::separator(app)?)?;
-    c.extensions_menu.append(&MenuItem::with_id(app, "ext-open", "Open extensions folder", true, None::<&str>)?)?;
-    c.extensions_menu.append(&MenuItem::with_id(app, "ext-rescan", "Refresh list", true, None::<&str>)?)?;
-    c.extensions_menu.append(&c.reload_item)?;
-    *c.extension_items.lock().unwrap() = extension_items;
-    Ok(())
-}
-
-/// Handles a tray click if it belongs to the Themes or Extensions menus.
-pub fn handle_menu(app: &AppHandle, id: &str) -> bool {
-    let c = app.state::<Customize>();
-    if let Some(theme) = id.strip_prefix("theme:") {
-        c.settings.lock().unwrap().theme = theme.to_string();
-        for (item_id, item) in c.theme_items.lock().unwrap().iter() {
-            let _ = item.set_checked(item_id == theme);
-        }
-        save_and_apply_theme(app);
-    } else if id == "promos-toggle" {
-        c.settings.lock().unwrap().hide_promos = c.promos_item.is_checked().unwrap_or(false);
-        save_and_apply_theme(app);
-    } else if let Some(file) = id.strip_prefix("ext:") {
-        toggle_extension(app, file);
-    } else if id == "themes-open" || id == "ext-open" {
-        let dir = folder(app, if id == "themes-open" { "themes" } else { "extensions" });
-        let _ = std::fs::create_dir_all(&dir);
-        let _ = app.opener().open_path(dir.to_string_lossy(), None::<&str>);
-    } else if id == "themes-rescan" || id == "ext-rescan" {
-        let _ = fill(app);
-    } else if id == "page-reload" {
-        let _ = c.reload_item.set_text("Reload page");
-        if let Some(w) = app.get_webview_window("main") {
-            let _ = w.eval("location.reload()");
-        }
-    } else {
-        return false;
-    }
-    true
-}
-
-fn toggle_extension(app: &AppHandle, file: &str) {
-    let c = app.state::<Customize>();
-    let item = c.extension_items.lock().unwrap().iter().find(|(f, _)| f == file).map(|(_, i)| i.clone());
-    let Some(item) = item else { return };
-    let enabled = c.settings.lock().unwrap().extensions.iter().any(|f| f == file);
-
-    if enabled {
-        // Turning off: a script that already ran can't be unloaded, so it's gone after a reload.
-        c.settings.lock().unwrap().extensions.retain(|f| f != file);
-        save(app);
-        let _ = item.set_checked(false);
-        let _ = c.reload_item.set_text("Reload page to finish turning it off");
-        return;
-    }
-
-    // Turning on: undo the menu's own tick until the user confirms.
-    let _ = item.set_checked(false);
-    let app = app.clone();
-    let file = file.to_string();
-    app.dialog()
-        .message(format!(
-            "\"{file}\" will run inside YouTube Music while you're signed in to your Google account. \
-             A malicious extension could act on your account.\n\n\
-             Only turn on extensions you wrote yourself or got from someone you trust."
-        ))
-        .title("Turn on this extension?")
-        .kind(MessageDialogKind::Warning)
-        .buttons(MessageDialogButtons::OkCancelCustom("Turn on".into(), "Cancel".into()))
-        .show(move |ok| {
-            if !ok {
-                return;
-            }
-            let c = app.state::<Customize>();
-            c.settings.lock().unwrap().extensions.push(file.clone());
-            save(&app);
-            let _ = item.set_checked(true);
-            if let Some(w) = app.get_webview_window("main") {
-                run_extension(&app, &w, &file);
-            }
-        });
-}
-
 /// After each page load: re-apply the theme (it may have changed since start-up) and run the
 /// enabled extensions.
 pub fn on_page_load(w: &WebviewWindow) {
     let app = w.app_handle();
-    let settings = load(app);
-    let _ = w.eval(format!(
-        "window.__optimusic && window.__optimusic.setTheme({});",
-        json(&theme_css(app, &settings))
-    ));
+    let settings = app.state::<Customize>().settings.lock().unwrap().clone();
+    *app.state::<Customize>().needs_reload.lock().unwrap() = false;
+    apply_theme(app, &settings);
     for file in &settings.extensions {
         run_extension(app, w, file);
+    }
+}
+
+/// Opens (or focuses) the Themes & extensions window.
+pub fn open_window(app: &AppHandle, browser_args: Option<&str>) {
+    if let Some(w) = app.get_webview_window("settings") {
+        let _ = w.unminimize();
+        let _ = w.set_focus();
+        return;
+    }
+    let mut builder = WebviewWindowBuilder::new(app, "settings", WebviewUrl::App("settings.html".into()))
+        .title("Optimusic: Themes & extensions")
+        .inner_size(760.0, 600.0)
+        .min_inner_size(520.0, 420.0);
+    #[cfg(target_os = "windows")]
+    if let Some(args) = browser_args {
+        // Must match the main window's, as both share one WebView2 profile.
+        builder = builder.additional_browser_args(args);
+    }
+    #[cfg(not(target_os = "windows"))]
+    let _ = browser_args;
+    let _ = builder.build();
+}
+
+// ---- What the settings page sees ----
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Theme {
+    id: String,
+    name: String,
+    description: String,
+    builtin: bool,
+    preview: Option<[String; 3]>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Extension {
+    file: String,
+    name: String,
+    description: String,
+    enabled: bool,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct View {
+    themes: Vec<Theme>,
+    theme: String,
+    hide_promos: bool,
+    extensions: Vec<Extension>,
+    needs_reload: bool,
+    themes_folder: String,
+    extensions_folder: String,
+}
+
+fn view(app: &AppHandle) -> View {
+    let c = app.state::<Customize>();
+    let s = c.settings.lock().unwrap().clone();
+    let needs_reload = *c.needs_reload.lock().unwrap();
+    let colours = |c: [&str; 3]| Some(c.map(String::from));
+
+    let mut themes = vec![Theme {
+        id: String::new(),
+        name: "Default".into(),
+        description: "YouTube Music as it comes.".into(),
+        builtin: true,
+        preview: colours(DEFAULT_PREVIEW),
+    }];
+    themes.extend(BUILTIN.iter().map(|(id, name, description, preview, _)| Theme {
+        id: format!("builtin:{id}"),
+        name: name.to_string(),
+        description: description.to_string(),
+        builtin: true,
+        preview: colours(*preview),
+    }));
+    let themes_dir = folder(app, "themes");
+    themes.extend(files(&themes_dir, "css").into_iter().map(|f| Theme {
+        description: read(&themes_dir.join(&f)).map(|t| describe(&t)).unwrap_or_default(),
+        name: stem(&f),
+        id: format!("file:{f}"),
+        builtin: false,
+        preview: None,
+    }));
+
+    let ext_dir = folder(app, "extensions");
+    let extensions = files(&ext_dir, "js")
+        .into_iter()
+        .map(|f| Extension {
+            description: read(&ext_dir.join(&f)).map(|t| describe(&t)).unwrap_or_default(),
+            name: stem(&f),
+            enabled: s.extensions.contains(&f),
+            file: f,
+        })
+        .collect();
+
+    View {
+        themes,
+        theme: s.theme,
+        hide_promos: s.hide_promos,
+        extensions,
+        needs_reload,
+        themes_folder: themes_dir.to_string_lossy().into_owned(),
+        extensions_folder: ext_dir.to_string_lossy().into_owned(),
+    }
+}
+
+// ---- Commands for the settings page (see capabilities/settings.json) ----
+
+#[tauri::command]
+pub fn customize_state(app: AppHandle) -> View {
+    view(&app)
+}
+
+#[tauri::command]
+pub fn set_theme(app: AppHandle, id: String) -> View {
+    update(&app, |s| s.theme = id);
+    view(&app)
+}
+
+#[tauri::command]
+pub fn set_hide_promos(app: AppHandle, hide: bool) -> View {
+    update(&app, |s| s.hide_promos = hide);
+    view(&app)
+}
+
+/// The page shows its own warning before calling this with `enabled: true`.
+#[tauri::command]
+pub fn set_extension(app: AppHandle, file: String, enabled: bool) -> View {
+    let c = app.state::<Customize>();
+    let was = c.settings.lock().unwrap().extensions.contains(&file);
+    if enabled && !was && files(&folder(&app, "extensions"), "js").contains(&file) {
+        c.settings.lock().unwrap().extensions.push(file.clone());
+        save(&app);
+        if let Some(w) = app.get_webview_window("main") {
+            run_extension(&app, &w, &file);
+        }
+    } else if !enabled && was {
+        // A script that already ran can't be unloaded; it's gone after a reload.
+        c.settings.lock().unwrap().extensions.retain(|f| *f != file);
+        save(&app);
+        *c.needs_reload.lock().unwrap() = true;
+    }
+    view(&app)
+}
+
+#[tauri::command]
+pub fn open_customize_folder(app: AppHandle, kind: String) {
+    let dir = folder(&app, if kind == "themes" { "themes" } else { "extensions" });
+    let _ = std::fs::create_dir_all(&dir);
+    let _ = app.opener().open_path(dir.to_string_lossy(), None::<&str>);
+}
+
+#[tauri::command]
+pub fn reload_music_page(app: AppHandle) {
+    if let Some(w) = app.get_webview_window("main") {
+        let _ = w.eval("location.reload()");
+    }
+}
+
+// ---- Internals ----
+
+fn update(app: &AppHandle, f: impl FnOnce(&mut Settings)) {
+    let settings = {
+        let c = app.state::<Customize>();
+        let mut s = c.settings.lock().unwrap();
+        f(&mut s);
+        s.clone()
+    };
+    save(app);
+    apply_theme(app, &settings);
+}
+
+fn apply_theme(app: &AppHandle, settings: &Settings) {
+    if let Some(w) = app.get_webview_window("main") {
+        let _ = w.eval(format!(
+            "window.__optimusic && window.__optimusic.setTheme({});",
+            json(&theme_css(app, settings))
+        ));
     }
 }
 
@@ -224,22 +267,13 @@ fn run_extension(app: &AppHandle, w: &WebviewWindow, file: &str) {
     ));
 }
 
-fn save_and_apply_theme(app: &AppHandle) {
-    save(app);
-    let settings = app.state::<Customize>().settings.lock().unwrap().clone();
-    if let Some(w) = app.get_webview_window("main") {
-        let _ = w.eval(format!(
-            "window.__optimusic && window.__optimusic.setTheme({});",
-            json(&theme_css(app, &settings))
-        ));
-    }
-}
-
 fn theme_css(app: &AppHandle, s: &Settings) -> String {
     let mut css = if let Some(id) = s.theme.strip_prefix("builtin:") {
-        BUILTIN.iter().find(|(b, ..)| *b == id).map(|(.., css)| css.to_string()).unwrap_or_default()
+        BUILTIN.iter().find(|b| b.0 == id).map(|b| b.4.to_string()).unwrap_or_default()
     } else if let Some(file) = s.theme.strip_prefix("file:") {
-        read(&folder(app, "themes").join(file)).unwrap_or_default()
+        // Only files actually in the themes folder (no "../" paths)
+        let dir = folder(app, "themes");
+        files(&dir, "css").iter().find(|f| *f == file).and_then(|f| read(&dir.join(f))).unwrap_or_default()
     } else {
         String::new()
     };
@@ -248,6 +282,26 @@ fn theme_css(app: &AppHandle, s: &Settings) -> String {
         css.push_str(NO_PROMOS);
     }
     css
+}
+
+/// The file's first comment, minus an "Optimusic theme:" / "Optimusic extension:" prefix.
+fn describe(text: &str) -> String {
+    let first = text.lines().map(str::trim).find(|l| !l.is_empty()).unwrap_or("");
+    let comment = first
+        .strip_prefix("//")
+        .or_else(|| first.strip_prefix("/*"))
+        .map(|c| c.trim_end_matches("*/").trim())
+        .unwrap_or("");
+    let comment = ["Optimusic theme:", "Optimusic extension:"]
+        .iter()
+        .find_map(|p| comment.strip_prefix(p))
+        .unwrap_or(comment);
+    let mut chars = comment.trim().chars().take(160);
+    chars.next().map(|c| c.to_uppercase().chain(chars).collect()).unwrap_or_default()
+}
+
+fn stem(file: &str) -> String {
+    Path::new(file).file_stem().unwrap_or_default().to_string_lossy().into_owned()
 }
 
 fn folder(app: &AppHandle, name: &str) -> PathBuf {

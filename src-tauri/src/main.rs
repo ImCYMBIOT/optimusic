@@ -129,6 +129,26 @@ fn show_window(app: &AppHandle) {
     }
 }
 
+/// The WebView2 flags for every window (they share one profile, so they must match).
+#[cfg(target_os = "windows")]
+fn browser_args() -> String {
+    std::env::var("OPTIMUSIC_BROWSER_ARGS").unwrap_or_else(|_| BROWSER_ARGS.to_string())
+}
+
+fn open_settings_window(app: &AppHandle) {
+    #[cfg(target_os = "windows")]
+    customize::open_window(app, Some(&browser_args()));
+    #[cfg(not(target_os = "windows"))]
+    customize::open_window(app, None);
+}
+
+/// From the settings button that bridge.js adds to YouTube Music's top bar (or Ctrl+,).
+/// Async on purpose: creating a window from a synchronous command deadlocks on Windows.
+#[tauri::command]
+async fn open_settings(app: AppHandle) {
+    open_settings_window(&app);
+}
+
 /// Called from bridge.js whenever the track or play state changes.
 #[tauri::command]
 fn track_update(info: TrackInfo, state: State<'_, AppState>) {
@@ -229,7 +249,6 @@ fn main() {
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .plugin(tauri_plugin_dialog::init())
         .manage(AppState {
             media: Mutex::new(None),
             now_playing: Mutex::new(None),
@@ -238,9 +257,19 @@ fn main() {
             backgrounded: AtomicBool::new(false),
             discord: Mutex::new(None),
         })
-        .invoke_handler(tauri::generate_handler![track_update])
+        .invoke_handler(tauri::generate_handler![
+            track_update,
+            open_settings,
+            customize::customize_state,
+            customize::set_theme,
+            customize::set_hide_promos,
+            customize::set_extension,
+            customize::open_customize_folder,
+            customize::reload_music_page,
+        ])
         .setup(|app| {
             let handle = app.handle().clone();
+            customize::manage(&handle);
 
             // ---- Main window: YouTube Music itself ----
             let nav_handle = handle.clone();
@@ -278,8 +307,7 @@ fn main() {
             }
             #[cfg(target_os = "windows")]
             {
-                let args = std::env::var("OPTIMUSIC_BROWSER_ARGS");
-                builder = builder.additional_browser_args(args.as_deref().unwrap_or(BROWSER_ARGS));
+                builder = builder.additional_browser_args(&browser_args());
             }
             builder.build()?;
 
@@ -307,14 +335,9 @@ fn main() {
                 update_modes.iter().map(|i| i as &dyn IsMenuItem<Wry>).collect();
             update_items.extend([&sep3 as &dyn IsMenuItem<Wry>, &check_now]);
             let updates_menu = Submenu::with_items(app, "Updates", true, &update_items)?;
-            let (themes_menu, extensions_menu) = customize::menus(&handle)?;
-            items.extend([
-                &themes_menu as &dyn IsMenuItem<Wry>,
-                &extensions_menu,
-                &updates_menu,
-                &show,
-                &quit,
-            ]);
+            let customize_item =
+                MenuItem::with_id(app, "customize-open", "Themes & extensions…", true, None::<&str>)?;
+            items.extend([&customize_item as &dyn IsMenuItem<Wry>, &updates_menu, &show, &quit]);
             let menu = Menu::with_items(app, &items)?;
             updates::start(&handle, menu.clone(), update_modes.clone(), check_now.clone())?;
 
@@ -354,13 +377,12 @@ fn main() {
                         app.state::<AppState>().quitting.store(true, Ordering::SeqCst);
                         app.exit(0);
                     }
+                    "customize-open" => open_settings_window(app),
                     "updates-check" => updates::check_now(app),
                     "update-install" => updates::install_clicked(app),
                     id => {
                         if let Some(mode) = updates::Mode::from_menu_id(id) {
                             updates::set_mode(app, mode);
-                        } else {
-                            customize::handle_menu(app, id);
                         }
                     }
                 })
@@ -386,9 +408,13 @@ fn main() {
             *state.media.lock().unwrap() = setup_media_controls(&handle);
             Ok(())
         })
-        // Closing the window hides it to the tray; music keeps playing.
+        // Closing the main window hides it to the tray; music keeps playing. (The settings
+        // window really closes, which frees its memory.)
         .on_window_event(|window, event| {
-            let Some(w) = window.app_handle().get_webview_window(window.label()) else {
+            if window.label() != "main" {
+                return;
+            }
+            let Some(w) = window.app_handle().get_webview_window("main") else {
                 return;
             };
             match event {

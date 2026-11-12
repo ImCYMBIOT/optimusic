@@ -38,7 +38,7 @@ Your numbers will vary with your PC, your library and what's on screen.
 - **Background playback:** closing the window hides it to the tray and the music keeps playing
 - **Low-memory background mode:** while hidden or minimized, the webview stops rendering and trims its memory
 - **Themes and extensions:** built-in themes (AMOLED Black, Optimusic Violet), your own CSS
-  themes, and optional JavaScript extensions, all switched from the tray. Think Spicetify for
+  themes, and optional JavaScript extensions, in their own window (Ctrl+,). Think Spicetify for
   YouTube Music
 - **Updates your way:** Off, Notify me (default) or Install automatically, from the tray's
   Updates menu. Every update is signed and checked before it's installed
@@ -92,7 +92,9 @@ icon brings the window back after you close it.
 
 ## Themes and extensions
 Optimusic can restyle YouTube Music and run small add-on scripts, a bit like Spicetify does for
-Spotify. Everything is in the tray (menu bar on macOS):
+Spotify. Open **Themes & extensions** from the palette button in YouTube Music's top bar, with
+**Ctrl+,** (**Cmd+,** on macOS), or from the tray. Changes apply instantly, and the window stays
+open so you can try a few.
 
 - **Themes:** pick **Default**, **AMOLED Black** (true black) or **Optimusic Violet** (violet
   instead of red accents), or any theme you've added. **Hide upgrade prompts** is a separate
@@ -101,11 +103,13 @@ Spotify. Everything is in the tray (menu bar on macOS):
 - **Extensions:** each one has its own switch and starts **off**. Turning one on asks you to
   confirm first.
 
-Both only ever run on music.youtube.com, never on Google's sign-in pages.
+Both only ever run on music.youtube.com, never on Google's sign-in pages. The YouTube Music page
+itself can only *open* this window; it can't change your settings or turn on extensions.
 
 ### Adding your own
-Use **Open themes folder** / **Open extensions folder** in the tray, drop a file in, then click
-**Refresh list**:
+Click **Open themes folder** / **Open extensions folder** in the window and drop a file in; it
+shows up as soon as you switch back to the window (or click **Refresh**). The first comment in
+the file becomes its description.
 - **Themes** are `.css` files. YouTube Music's colors are CSS variables, so most themes just
   override them, for example:
   ```css
@@ -120,7 +124,8 @@ Use **Open themes folder** / **Open extensions folder** in the tray, drop a file
   `ytmusic-player-bar tp-yt-paper-slider` for the progress bar.
 - **Extensions** are `.js` files that run in the YouTube Music page after it loads. The player is
   `document.getElementById("movie_player")` (`playVideo()`, `getVolume()`, `setVolume()`…).
-  Turning an extension off takes effect after **Reload page**.
+  Turning an extension off takes effect once YouTube Music reloads; the window offers a
+  **Reload now** button.
 
 The [`examples/`](examples) folder has a sample of each: `rounded-art.css` and `volume-scroll.js`
 (scroll the mouse wheel over the player bar to change the volume).
@@ -222,11 +227,12 @@ src-tauri/
   src/main.rs          window, tray, media controls, navigation policy, WebView2 tuning
   src/discord.rs       Discord Rich Presence, on its own thread
   src/updates.rs       update checks and the tray's Updates menu
-  src/customize.rs     themes and extensions, and their tray menus
+  src/customize.rs     themes and extensions, and the commands behind their window
   themes/              the built-in themes
   src/bridge.js        injected into the page: player control + now-playing reports
-  capabilities/        IPC allow-list for music.youtube.com
+  capabilities/        IPC allow-lists: music.youtube.com vs. the app's own settings page
   tauri.conf.json
+dist/settings.html     the Themes & extensions window
 examples/              a sample theme and extension
 .github/workflows/     release builds for Windows, Linux and macOS
 bench.ps1              Windows CPU/memory benchmark for a whole process tree

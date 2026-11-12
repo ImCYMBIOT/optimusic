@@ -1,0 +1,14 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "settings",
+  "description": "The app's own Themes & extensions page (bundled, never a website).",
+  "windows": ["settings"],
+  "permissions": [
+    "allow-customize-state",
+    "allow-set-theme",
+    "allow-set-hide-promos",
+    "allow-set-extension",
+    "allow-open-customize-folder",
+    "allow-reload-music-page"
+  ]
+}
