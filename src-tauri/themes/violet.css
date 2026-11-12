@@ -1,0 +1,14 @@
+/* Optimusic Violet: swaps the red accents (progress bar, links, highlights) for violet. */
+html {
+  --ytmusic-color-lightred: #a78bfa !important;
+  --ytmusic-brand-link-text: #a78bfa !important;
+  --ytmusic-overlay-background-brand: rgba(124, 58, 237, 0.9) !important;
+}
+ytmusic-player-bar tp-yt-paper-slider,
+ytmusic-player-page tp-yt-paper-slider {
+  --paper-slider-active-color: #a78bfa !important;
+  --paper-slider-knob-color: #c4b5fd !important;
+}
+::selection {
+  background: rgba(124, 58, 237, 0.45);
+}

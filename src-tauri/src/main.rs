@@ -1,5 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod customize;
 mod discord;
 mod updates;
 
@@ -228,6 +229,7 @@ fn main() {
         .plugin(tauri_plugin_window_state::Builder::default().build())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_dialog::init())
         .manage(AppState {
             media: Mutex::new(None),
             now_playing: Mutex::new(None),
@@ -250,7 +252,12 @@ fn main() {
             .title("Optimusic")
             .inner_size(1200.0, 800.0)
             .min_inner_size(400.0, 300.0)
-            .initialization_script(BRIDGE_JS)
+            .initialization_script(&customize::init_script(&handle, BRIDGE_JS))
+            .on_page_load(|w, payload| {
+                if payload.event() == tauri::webview::PageLoadEvent::Finished {
+                    customize::on_page_load(&w);
+                }
+            })
             .on_navigation(move |url| {
                 if allowed_in_app(url) {
                     true
@@ -300,7 +307,14 @@ fn main() {
                 update_modes.iter().map(|i| i as &dyn IsMenuItem<Wry>).collect();
             update_items.extend([&sep3 as &dyn IsMenuItem<Wry>, &check_now]);
             let updates_menu = Submenu::with_items(app, "Updates", true, &update_items)?;
-            items.extend([&updates_menu as &dyn IsMenuItem<Wry>, &show, &quit]);
+            let (themes_menu, extensions_menu) = customize::menus(&handle)?;
+            items.extend([
+                &themes_menu as &dyn IsMenuItem<Wry>,
+                &extensions_menu,
+                &updates_menu,
+                &show,
+                &quit,
+            ]);
             let menu = Menu::with_items(app, &items)?;
             updates::start(&handle, menu.clone(), update_modes.clone(), check_now.clone())?;
 
@@ -345,6 +359,8 @@ fn main() {
                     id => {
                         if let Some(mode) = updates::Mode::from_menu_id(id) {
                             updates::set_mode(app, mode);
+                        } else {
+                            customize::handle_menu(app, id);
                         }
                     }
                 })

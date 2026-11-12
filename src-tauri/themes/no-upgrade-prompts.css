@@ -1,0 +1,7 @@
+/* Hide Premium upgrade prompts: the "Upgrade" sidebar entry and the "Try Premium" pop-ups.
+   Cosmetic only; it doesn't block or skip ads. */
+ytmusic-guide-entry-renderer:has(a[href*="music_premium"]),
+ytmusic-mealbar-promo-renderer,
+tp-yt-paper-dialog:has(ytmusic-mealbar-promo-renderer) {
+  display: none !important;
+}

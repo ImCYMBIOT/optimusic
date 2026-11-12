@@ -16,6 +16,8 @@ Only the [latest release](https://github.com/ImCYMBIOT/optimusic/releases/latest
 - The signing key is only available to release builds of `v*` tags, and only after the
   maintainer approves each one. Builds from pull requests never see it.
 - Third-party build actions are pinned to exact commits.
+- Extensions are off by default, each needs the user's confirmation to turn on, and they only run
+  on music.youtube.com. Themes are plain CSS.
 - Optimusic talks to music.youtube.com and Google sign-in, GitHub (to check for updates, unless
   updates are set to Off), and, if it's running, the local Discord app. Nothing else, and no
   analytics.

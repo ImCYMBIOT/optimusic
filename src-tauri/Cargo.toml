@@ -22,6 +22,7 @@ url = "2"
 discord-rich-presence = "1.1"
 tauri-plugin-updater = "2"
 serde_json = "1"
+tauri-plugin-dialog = "2"
 
 # Direct WebView2 access for the low-memory mode while hidden (versions match wry's).
 [target.'cfg(windows)'.dependencies]

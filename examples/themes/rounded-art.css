@@ -1,0 +1,9 @@
+/* Optimusic theme: rounder album art and thumbnails everywhere.
+   Copy into Optimusic's themes folder (tray → Themes → Open themes folder), then
+   tray → Themes → Refresh list, and pick it. */
+ytmusic-player-bar img,
+ytmusic-two-row-item-renderer img,
+ytmusic-responsive-list-item-renderer img,
+ytmusic-player #song-image img {
+  border-radius: 12px !important;
+}

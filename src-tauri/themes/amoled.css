@@ -1,0 +1,20 @@
+/* AMOLED Black: true black everywhere, which also saves power on OLED screens. */
+html {
+  --ytmusic-background: #000 !important;
+  --ytmusic-general-background-a: #000 !important;
+  --ytmusic-general-background-c: #000 !important;
+  --ytmusic-brand-background-solid: #000 !important;
+  --ytmusic-nav-bar: #000 !important;
+  --ytmusic-player-bar-background: #000 !important;
+  --ytmusic-player-page-background: #000 !important;
+  --ytmusic-search-background: #0a0a0a !important;
+  --ytmusic-dropdown-background: #111 !important;
+  --ytmusic-dropdown-item-hover-background: #1a1a1a !important;
+}
+body,
+ytmusic-nav-bar,
+ytmusic-player-bar,
+#nav-bar-background,
+#player-bar-background {
+  background: #000 !important;
+}

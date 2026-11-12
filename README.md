@@ -37,6 +37,9 @@ Your numbers will vary with your PC, your library and what's on screen.
   isn't running, and switchable from the tray ("Show on Discord")
 - **Background playback:** closing the window hides it to the tray and the music keeps playing
 - **Low-memory background mode:** while hidden or minimized, the webview stops rendering and trims its memory
+- **Themes and extensions:** built-in themes (AMOLED Black, Optimusic Violet), your own CSS
+  themes, and optional JavaScript extensions, all switched from the tray. Think Spicetify for
+  YouTube Music
 - **Updates your way:** Off, Notify me (default) or Install automatically, from the tray's
   Updates menu. Every update is signed and checked before it's installed
 - **Single instance:** launching it again just brings the window back
@@ -86,6 +89,53 @@ From the [latest release](https://github.com/ImCYMBIOT/optimusic/releases/latest
 
 On macOS Optimusic lives in the menu bar (top right) instead of a tray, and clicking the Dock
 icon brings the window back after you close it.
+
+## Themes and extensions
+Optimusic can restyle YouTube Music and run small add-on scripts, a bit like Spicetify does for
+Spotify. Everything is in the tray (menu bar on macOS):
+
+- **Themes:** pick **Default**, **AMOLED Black** (true black) or **Optimusic Violet** (violet
+  instead of red accents), or any theme you've added. **Hide upgrade prompts** is a separate
+  switch that works with any theme; it hides the "Upgrade" entry and "Try Premium" pop-ups (it
+  doesn't touch ads).
+- **Extensions:** each one has its own switch and starts **off**. Turning one on asks you to
+  confirm first.
+
+Both only ever run on music.youtube.com, never on Google's sign-in pages.
+
+### Adding your own
+Use **Open themes folder** / **Open extensions folder** in the tray, drop a file in, then click
+**Refresh list**:
+- **Themes** are `.css` files. YouTube Music's colors are CSS variables, so most themes just
+  override them, for example:
+  ```css
+  html {
+    --ytmusic-background: #101418 !important;
+    --ytmusic-general-background-c: #101418 !important;
+    --ytmusic-brand-link-text: #4fd1c5 !important;
+  }
+  ```
+  Other useful ones: `--ytmusic-nav-bar`, `--ytmusic-player-bar-background`,
+  `--ytmusic-general-background-a`, and `--paper-slider-active-color` on
+  `ytmusic-player-bar tp-yt-paper-slider` for the progress bar.
+- **Extensions** are `.js` files that run in the YouTube Music page after it loads. The player is
+  `document.getElementById("movie_player")` (`playVideo()`, `getVolume()`, `setVolume()`…).
+  Turning an extension off takes effect after **Reload page**.
+
+The [`examples/`](examples) folder has a sample of each: `rounded-art.css` and `volume-scroll.js`
+(scroll the mouse wheel over the player bar to change the volume).
+
+The folders are in Optimusic's settings folder:
+- Windows: `%APPDATA%\io.github.imcymbiot.optimusic\`
+- macOS: `~/Library/Application Support/io.github.imcymbiot.optimusic/`
+- Linux: `~/.config/io.github.imcymbiot.optimusic/`
+
+> **Only install extensions you trust.** An extension runs inside YouTube Music while you're
+> signed in to Google, so a malicious one could act on your account. Read the code first, or
+> only use ones you wrote yourself. Themes are plain CSS and can't do that.
+
+YouTube changes its website from time to time, which can break a theme or extension until it's
+updated.
 
 ## Updates
 Pick how Optimusic updates from the tray (menu bar on macOS) → **Updates**:
@@ -172,9 +222,12 @@ src-tauri/
   src/main.rs          window, tray, media controls, navigation policy, WebView2 tuning
   src/discord.rs       Discord Rich Presence, on its own thread
   src/updates.rs       update checks and the tray's Updates menu
+  src/customize.rs     themes and extensions, and their tray menus
+  themes/              the built-in themes
   src/bridge.js        injected into the page: player control + now-playing reports
   capabilities/        IPC allow-list for music.youtube.com
   tauri.conf.json
+examples/              a sample theme and extension
 .github/workflows/     release builds for Windows, Linux and macOS
 bench.ps1              Windows CPU/memory benchmark for a whole process tree
 ```

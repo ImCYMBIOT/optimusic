@@ -1,7 +1,9 @@
 // Injected into music.youtube.com before page scripts run.
-// Two jobs: (1) expose window.__optimusic.control() so Rust can drive the player,
+// Three jobs: (1) expose window.__optimusic.control() so Rust can drive the player,
 // (2) report now-playing info to Rust, event-driven and throttled — no polling loop
-// beyond a cheap 2s check for the <video> element being replaced.
+// beyond a cheap 2s check for the <video> element being replaced, (3) apply the theme and
+// run extensions that Rust hands over (see customize.rs). Only on music.youtube.com, so
+// none of it ever runs on Google's sign-in pages.
 (() => {
   if (window.__optimusic || location.hostname !== "music.youtube.com") return;
 
@@ -29,7 +31,35 @@
       }
       setTimeout(() => push(true), 300);
     },
+
+    /** Replaces the theme stylesheet; an empty string removes it. */
+    setTheme(css) {
+      const apply = () => {
+        let el = document.getElementById("optimusic-theme");
+        if (!el) {
+          el = document.createElement("style");
+          el.id = "optimusic-theme";
+        }
+        el.textContent = css;
+        // Last in <head> so it wins over the page's own styles
+        (document.head || document.documentElement).appendChild(el);
+      };
+      if (document.head) apply();
+      else document.addEventListener("DOMContentLoaded", apply, { once: true });
+    },
+
+    /** Runs an extension once per page load; errors stay inside it. */
+    runExtension(name, fn) {
+      if (ran.has(name)) return;
+      ran.add(name);
+      try {
+        fn();
+      } catch (e) {
+        console.error(`[Optimusic extension ${name}]`, e);
+      }
+    },
   };
+  const ran = new Set();
 
   function snapshot() {
     const md = navigator.mediaSession && navigator.mediaSession.metadata;
