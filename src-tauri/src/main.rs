@@ -2,6 +2,8 @@
 
 mod customize;
 mod discord;
+#[cfg(target_os = "windows")]
+mod taskbar;
 mod updates;
 
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -66,6 +68,8 @@ struct TrackInfo {
     duration: f64,
     position: f64,
     playing: bool,
+    #[serde(default)]
+    video_playing: Option<bool>,
 }
 
 /// "Show on Discord" is on unless this marker file exists in the app's config folder.
@@ -151,7 +155,18 @@ async fn open_settings(app: AppHandle) {
 
 /// Called from bridge.js whenever the track or play state changes.
 #[tauri::command]
-fn track_update(info: TrackInfo, state: State<'_, AppState>) {
+fn track_update(app: AppHandle, info: TrackInfo, state: State<'_, AppState>) {
+    #[cfg(target_os = "windows")]
+    taskbar::update(
+        &app,
+        &info.title,
+        &info.artist,
+        info.playing,
+        info.art.as_deref(),
+        info.video_playing,
+    );
+    #[cfg(not(target_os = "windows"))]
+    let _ = app;
     if let Some(mc) = state.media.lock().unwrap().as_mut() {
         let _ = mc.set_metadata(MediaMetadata {
             title: Some(&info.title),
@@ -242,11 +257,15 @@ fn allowed_in_app(url: &url::Url) -> bool {
 }
 
 fn main() {
+    let window_state = tauri_plugin_window_state::Builder::default();
+    #[cfg(target_os = "windows")]
+    let window_state = window_state.skip_initial_state("main");
+
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             show_window(app);
         }))
-        .plugin(tauri_plugin_window_state::Builder::default().build())
+        .plugin(window_state.build())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(AppState {
@@ -307,9 +326,23 @@ fn main() {
             }
             #[cfg(target_os = "windows")]
             {
-                builder = builder.additional_browser_args(&browser_args());
+                // Install the taskbar hook before the first TaskbarButtonCreated message.
+                builder = builder.additional_browser_args(&browser_args()).visible(false);
             }
-            builder.build()?;
+            let main_window = builder.build()?;
+            #[cfg(target_os = "windows")]
+            {
+                use tauri_plugin_window_state::{StateFlags, WindowExt};
+
+                if let Err(error) = taskbar::setup(&handle) {
+                    eprintln!("Could not initialize taskbar media controls: {error}");
+                }
+                if main_window.restore_state(StateFlags::all()).is_err() {
+                    let _ = main_window.show();
+                }
+            }
+            #[cfg(not(target_os = "windows"))]
+            let _ = main_window;
 
             // ---- Tray ----
             let now_playing = MenuItem::with_id(app, "np", "Nothing playing", false, None::<&str>)?;

@@ -177,6 +177,7 @@ mod tests {
             duration: 200.0,
             position: 20.0,
             playing: true,
+            video_playing: Some(false),
         };
         let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as i64;
         assert!(apply(&mut c, Some(activity(&t, now - 20_000, now + 180_000, true))).unwrap());
