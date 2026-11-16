@@ -226,8 +226,8 @@ cargo tauri build         # .deb + AppImage in target/release/bundle/
 Almost all of the memory is WebView2, not the Rust app (which uses about 5 MB). Optimusic tunes
 it in two ways (see `BROWSER_ARGS` in `main.rs`):
 - **Lean WebView2 flags:** Chromium's low-end-device mode; the GPU, network and audio services
-  run inside the browser process; Edge services (translate, SmartScreen, sync, component
-  updates…) are off. That's 9 processes down to 5.
+  run inside the browser process; Edge extras such as translate and sync are off. SmartScreen
+  and the browser's security updates stay on. That's 9 processes down to 5.
 - **Background mode:** when hidden to the tray or minimized, the webview is marked invisible and
   WebView2's Low memory target is set, so it trims down while the music keeps playing.
 
@@ -242,7 +242,7 @@ powershell -ExecutionPolicy Bypass -File .\bench.ps1 -App tauri -Phase playing -
 
 ## Troubleshooting
 - **Blank window or rendering glitches on Windows:** the flags are the first suspect; run with
-  `OPTIMUSIC_BROWSER_ARGS="--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection"` (the Tauri defaults).
+  `OPTIMUSIC_BROWSER_ARGS="--disable-features=msWebOOUI,msPdfOOUI"` (close to the Tauri defaults).
 - **Blank / white window on Linux (often NVIDIA):** `WEBKIT_DISABLE_DMABUF_RENDERER=1 optimusic`
 - **Google says "this browser may not be secure" at sign-in:** try a different user agent, e.g.
   `OPTIMUSIC_USER_AGENT="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15" optimusic`

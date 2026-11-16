@@ -30,10 +30,11 @@ const BRIDGE_JS: &str = include_str!("bridge.js");
 /// overrides the whole string, for experimenting with bench.ps1.
 #[cfg(target_os = "windows")]
 const BROWSER_ARGS: &str = concat!(
-    // wry defaults + Edge/Chromium services a music player never uses
-    "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,",
+    // Edge/Chromium extras a music player never uses. SmartScreen and the browser's security
+    // component updates are deliberately left on (wry's default turns SmartScreen off).
+    "--disable-features=msWebOOUI,msPdfOOUI,",
     "Translate,msEdgeTranslate,OptimizationHints,MediaRouter,DialMediaRouteProvider,",
-    "AutofillServerCommunication,InterestFeedContentSuggestions,CertificateTransparencyComponentUpdater,",
+    "AutofillServerCommunication,InterestFeedContentSuggestions,",
     "SpareRendererForSitePerProcess,BackForwardCache,",
     // run the audio service inside the browser process...
     "AudioServiceOutOfProcess",
@@ -45,7 +46,7 @@ const BROWSER_ARGS: &str = concat!(
     " --process-per-site",
     // fold the GPU process into the browser process
     " --in-process-gpu",
-    " --disable-background-networking --disable-component-update --disable-sync --no-pings",
+    " --disable-sync --no-pings",
 );
 
 struct AppState {
@@ -246,14 +247,24 @@ fn setup_media_controls(app: &AppHandle) -> Option<MediaControls> {
 /// Keep YouTube / Google sign-in inside the app; send every other link to the system browser.
 fn allowed_in_app(url: &url::Url) -> bool {
     if url.scheme() != "https" {
-        return url.scheme() == "about" || url.scheme() == "blob" || url.scheme() == "data";
+        return url.as_str() == "about:blank";
     }
     let host = url.host_str().unwrap_or("");
     host == "youtube.com"
         || host.ends_with(".youtube.com")
-        || host.starts_with("accounts.google.")
         || host.ends_with(".google.com")
         || host == "google.com"
+        || host.strip_prefix("accounts.google.").is_some_and(google_country_suffix)
+}
+
+/// Sign-in hops through Google's country domains (accounts.google.co.in, accounts.google.de…).
+/// Accepts only a country-style ending, so "accounts.google.evil.com" is not mistaken for one.
+fn google_country_suffix(rest: &str) -> bool {
+    let country = |s: &str| s.len() == 2 && s.bytes().all(|b| b.is_ascii_lowercase());
+    match rest.split_once('.') {
+        None => country(rest),
+        Some((second, cc)) => matches!(second, "co" | "com") && country(cc),
+    }
 }
 
 fn main() {
@@ -479,4 +490,38 @@ fn main() {
             }
             _ => {}
         });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::allowed_in_app;
+
+    #[test]
+    fn only_youtube_and_google_pages_stay_in_the_app() {
+        let allowed = |u: &str| allowed_in_app(&u.parse().unwrap());
+        for url in [
+            "https://music.youtube.com/watch?v=x",
+            "https://accounts.google.com/signin",
+            "https://accounts.google.co.in/accounts/SetSID",
+            "https://accounts.google.com.au/x",
+            "https://accounts.google.de/x",
+            "https://accounts.youtube.com/x",
+            "about:blank",
+        ] {
+            assert!(allowed(url), "{url}");
+        }
+        for url in [
+            "https://accounts.google.evil.com/signin",
+            "https://accounts.google.com.evil.io/signin",
+            "https://accounts.google.co.evil/x",
+            "https://notyoutube.com/",
+            "https://youtube.com.evil.com/",
+            "http://music.youtube.com/",
+            "data:text/html,<h1>hi</h1>",
+            "blob:https://music.youtube.com/1234",
+            "https://example.com/",
+        ] {
+            assert!(!allowed(url), "{url}");
+        }
+    }
 }

@@ -73,7 +73,9 @@ pub fn on_page_load(w: &WebviewWindow) {
     let settings = app.state::<Customize>().settings.lock().unwrap().clone();
     *app.state::<Customize>().needs_reload.lock().unwrap() = false;
     apply_theme(app, &settings);
-    for file in &settings.extensions {
+    // Only files that are really in the extensions folder (the settings file could be edited)
+    let present = files(&folder(app, "extensions"), "js");
+    for file in settings.extensions.iter().filter(|f| present.contains(f)) {
         run_extension(app, w, file);
     }
 }
