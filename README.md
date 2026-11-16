@@ -249,6 +249,12 @@ powershell -ExecutionPolicy Bypass -File .\bench.ps1 -App tauri -Phase playing -
 - **Nothing shows on Discord:** turn on Discord's User Settings → Activity Privacy → "Share
   your activity status", check "Show on Discord" in the tray menu, and make sure music is playing
   (presence is cleared while paused).
+- **Windows Defender or another antivirus flags or removes Optimusic:** the Windows builds aren't
+  code-signed yet, and antivirus tools sometimes flag new, unsigned programs by mistake. Please
+  don't turn your antivirus off. Instead [open an issue](https://github.com/ImCYMBIOT/optimusic/issues)
+  with the detection name, so it can be reported as a false positive, and reinstall from the
+  [download links](#download), which always point to a version that isn't flagged. Every build
+  is made from this public source on GitHub's servers; see [SECURITY.md](SECURITY.md).
 - **Tray icon missing on GNOME:** enable the "AppIndicator and KStatusNotifierItem Support" extension.
 
 ## Project layout
@@ -295,6 +301,34 @@ machines, each one is reviewed carefully, with extra scrutiny for changes to `.g
 focused PRs with a clear description get merged fastest.
 
 Found a security problem? Please report it privately; see [SECURITY.md](SECURITY.md).
+
+## Privacy
+Optimusic has no analytics or telemetry and sends nothing to its developer. Every connection it
+makes, and how to turn off the optional ones, is listed in the [privacy policy](PRIVACY.md).
+
+## Code signing policy
+The Windows installers are **not code-signed yet**. Optimusic is applying for free code signing
+provided by [SignPath.io](https://about.signpath.io/), with a certificate by the
+[SignPath Foundation](https://signpath.org/). Once that is in place, signed files will show
+"SignPath Foundation" as the publisher, and this section will say so.
+
+How releases are made, today and after signing:
+- **Built from this repository only.** Every release is built by
+  [GitHub Actions](.github/workflows/release.yml) on GitHub's own servers, from a tagged commit
+  of this public source. Nothing built on a personal machine is published as a normal release.
+- **Every release is approved by hand** before it is built and signed.
+- **Outside contributions are reviewed** before they are merged.
+- **Updates are signed** with the project's own update key, and the app refuses any update
+  that isn't.
+
+Team roles:
+- Author (may change the code without further review): [@ImCYMBIOT](https://github.com/ImCYMBIOT)
+- Reviewer (reviews every pull request from contributors): [@ImCYMBIOT](https://github.com/ImCYMBIOT)
+- Approver (approves each release for signing): [@ImCYMBIOT](https://github.com/ImCYMBIOT)
+
+Privacy: see the [privacy policy](PRIVACY.md). Optimusic contacts GitHub to check for updates
+(which you can turn off) and, apart from YouTube Music itself, transfers nothing else unless you
+turn on a feature that does, such as the Discord status.
 
 ## License
 MIT, see [LICENSE](LICENSE).

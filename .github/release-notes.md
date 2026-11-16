@@ -21,4 +21,6 @@ Already on v0.3.0 or later? With updates set to Notify me, **Update to v0.4.2** 
 
 The installers aren't code-signed yet: on Windows, SmartScreen may warn the first time (More info → Run anyway); on macOS, open System Settings → Privacy & Security and click Open Anyway.
 
+[Code signing policy](https://github.com/ImCYMBIOT/optimusic#code-signing-policy) · [Privacy policy](https://github.com/ImCYMBIOT/optimusic/blob/main/PRIVACY.md)
+
 Not affiliated with, endorsed by, or sponsored by Google, YouTube, Apple, Microsoft or Discord.
