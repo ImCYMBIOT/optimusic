@@ -14,6 +14,21 @@
   const player = () => document.getElementById("movie_player");
   const video = () => document.querySelector("video");
 
+  function videoPlaying(v) {
+    if (!v || !v.isConnected) return null;
+    if (v.paused || v.ended) return false;
+    if (v.readyState < 1) return null;
+    if (!v.videoWidth || !v.videoHeight) return false;
+    const rect = v.getBoundingClientRect();
+    if (!rect.width || !rect.height) return false;
+    for (let el = v; el; el = el.parentElement) {
+      const style = getComputedStyle(el);
+      if (style.display === "none" || style.visibility === "hidden" ||
+          style.visibility === "collapse" || Number(style.opacity) === 0) return false;
+    }
+    return true;
+  }
+
   window.__optimusic = {
     control(action) {
       const p = player();
@@ -77,6 +92,7 @@
       duration: isFinite(v.duration) ? v.duration : 0,
       position: v.currentTime || 0,
       playing: !v.paused,
+      video_playing: videoPlaying(v),
     };
   }
 
@@ -87,7 +103,7 @@
   function push(force) {
     const s = snapshot();
     if (!s) return;
-    const key = s.title + "|" + s.artist + "|" + s.playing;
+    const key = JSON.stringify([s.title, s.artist, s.playing, s.art, s.video_playing]);
     const now = Date.now();
     if (force || key !== lastKey || now - lastSent > 5000) {
       lastKey = key;
@@ -143,7 +159,7 @@
     const v = video();
     if (!v || v === bound) return;
     bound = v;
-    for (const e of ["play", "pause", "loadedmetadata", "seeked", "durationchange", "ended"]) {
+    for (const e of ["play", "pause", "loadedmetadata", "seeked", "durationchange", "ended", "resize", "emptied"]) {
       v.addEventListener(e, () => push(true));
     }
     v.addEventListener("timeupdate", () => push(false));
@@ -151,6 +167,7 @@
   // The same cheap 2s check also (re)adds the button, as YouTube Music builds its top bar late
   setInterval(() => {
     bind();
+    push(false);
     addSettingsButton();
   }, 2000);
 })();
