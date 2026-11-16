@@ -29,7 +29,9 @@ webview2-com = "0.39"
 windows-core = "0.62"
 windows = { version = "0.62", features = ["Win32_System_Com", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging", "Win32_Graphics_Dwm", "Win32_Graphics_Gdi"] }
 image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp"] }
-reqwest = { version = "0.13", default-features = false, features = ["rustls"] }
+# Same TLS setup as the updater (rustls + ring), so there's only one crypto library in the app
+reqwest = { version = "0.13", default-features = false, features = ["rustls-no-provider"] }
+rustls = { version = "0.23", default-features = false, features = ["ring"] }
 
 # Small, fast release binary
 [profile.release]

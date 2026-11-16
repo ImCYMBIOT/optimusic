@@ -118,3 +118,18 @@ test("video metadata changes immediately report a switch to video", () => {
   assert.equal(app.messages.length, 2);
   assert.equal(app.messages.at(-1).info.video_playing, true);
 });
+
+test("progress ticks reuse the last video check instead of re-walking the page", () => {
+  const app = bridge();
+  app.tick();
+  assert.equal(app.messages.at(-1).info.video_playing, true);
+  let styleReads = 0;
+  const parentStyle = app.parent.style;
+  app.parent.style = new Proxy(parentStyle, { get(t, k) { styleReads++; return t[k]; } });
+  app.parent.style.display = "none";
+  styleReads = 0;
+  app.listeners.timeupdate();
+  assert.equal(styleReads, 0, "timeupdate must not recompute styles");
+  app.tick();
+  assert.equal(app.messages.at(-1).info.video_playing, false, "the 2s check picks up the change");
+});

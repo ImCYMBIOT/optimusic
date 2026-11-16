@@ -76,7 +76,10 @@
   };
   const ran = new Set();
 
-  function snapshot() {
+  // videoPlaying() walks up the page computing styles, so it's re-checked only on real changes
+  // (play, pause, resize, track change) and the 2s check, not on every progress tick.
+  let videoState;
+  function snapshot(fresh) {
     const md = navigator.mediaSession && navigator.mediaSession.metadata;
     const v = video();
     if (!md || !v || !md.title) return null;
@@ -92,7 +95,7 @@
       duration: isFinite(v.duration) ? v.duration : 0,
       position: v.currentTime || 0,
       playing: !v.paused,
-      video_playing: videoPlaying(v),
+      video_playing: fresh || videoState === undefined ? (videoState = videoPlaying(v)) : videoState,
     };
   }
 
@@ -100,8 +103,8 @@
   // (OS media widgets extrapolate the progress bar themselves).
   let lastKey = "";
   let lastSent = 0;
-  function push(force) {
-    const s = snapshot();
+  function push(force, fresh = force) {
+    const s = snapshot(fresh);
     if (!s) return;
     const key = JSON.stringify([s.title, s.artist, s.playing, s.art, s.video_playing]);
     const now = Date.now();
@@ -167,7 +170,7 @@
   // The same cheap 2s check also (re)adds the button, as YouTube Music builds its top bar late
   setInterval(() => {
     bind();
-    push(false);
+    push(false, true);
     addSettingsButton();
   }, 2000);
 })();

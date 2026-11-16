@@ -395,6 +395,10 @@ fn artwork_url(art: Option<&str>, video_playing: Option<bool>) -> Option<url::Ur
 }
 
 async fn load_art(url: &str) -> Result<RgbaImage, Box<dyn std::error::Error + Send + Sync>> {
+    // reqwest is built without a crypto provider; use ring, like the updater does.
+    if rustls::crypto::CryptoProvider::get_default().is_none() {
+        let _ = rustls::crypto::ring::default_provider().install_default();
+    }
     let client = reqwest::Client::builder()
         .redirect(reqwest::redirect::Policy::none())
         .timeout(Duration::from_secs(10))
@@ -564,6 +568,17 @@ fn clicked_action(message: u32, wparam: WPARAM) -> Option<&'static str> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Needs the internet: `cargo test -- --ignored taskbar_art`. Checks the download path end
+    /// to end, including the ring TLS provider setup.
+    #[test]
+    #[ignore]
+    fn taskbar_art_downloads_over_https() {
+        let url = artwork_url(Some("https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"), Some(false))
+            .expect("allowed artwork URL");
+        let art = tauri::async_runtime::block_on(load_art(url.as_str())).expect("download and decode");
+        assert!(art.width() > 0 && art.width() <= 512 && art.height() <= 512);
+    }
 
     #[test]
     fn thumbnail_heading_uses_song_name_and_app_name() {

@@ -61,6 +61,8 @@ Your numbers will vary with your PC, your library and what's on screen.
 - **Media keys and OS media controls:** the Windows media overlay (SMTC), MPRIS on Linux
   (GNOME/KDE media widget), Now Playing on macOS
 - **Tray player:** now playing, play/pause, next, previous, show/hide, quit
+- **Taskbar controls (Windows):** previous / play-pause / next buttons under the taskbar
+  preview, which shows the album art while a song (not a video) is playing
 - **Discord Rich Presence:** "Listening to Optimusic (for YouTube Music)" with the song, artist, cover art, a
   progress bar, and "Listen on YouTube Music" and "Get Optimusic" buttons. Cleared when you pause, idle when Discord
   isn't running, and switchable from the tray ("Show on Discord")
@@ -254,6 +256,7 @@ powershell -ExecutionPolicy Bypass -File .\bench.ps1 -App tauri -Phase playing -
 src-tauri/
   src/main.rs          window, tray, media controls, navigation policy, WebView2 tuning
   src/discord.rs       Discord Rich Presence, on its own thread
+  src/taskbar.rs       Windows taskbar thumbnail buttons and album-art preview
   src/updates.rs       update checks and the tray's Updates menu
   src/customize.rs     themes and extensions, and the commands behind their window
   themes/              the built-in themes
