@@ -1,11 +1,14 @@
 ## New: taskbar controls on Windows
-Hover over Optimusic in the taskbar and you get **Previous, Play/Pause and Next** buttons right under the preview. While a song is playing (not a music video), the preview shows its **album art** instead of a screenshot of the window, and the preview title and tray tooltip show what's playing.
+Hover over Optimusic in the taskbar and you get **Previous, Play/Pause and Next** buttons right under the preview. While a song is playing (not a music video), the preview shows its **album art**, and the preview title and tray tooltip show what's playing.
 
 Thanks to [@geeknoid](https://github.com/geeknoid) for contributing this ([#6](https://github.com/ImCYMBIOT/optimusic/pull/6)).
 
-## Also
-- Album art for the taskbar is only ever downloaded from Google's image servers, over HTTPS, with size limits.
-- On Linux and macOS this release has no visible changes; it keeps the version in step with Windows.
+This feature first shipped in v0.4.2, which was held back after Microsoft Defender flagged it by mistake. v0.4.3 is a fresh build with the same feature plus the security fixes below, tested before release.
+
+## Security hardening
+- **Safer link handling:** only real Google and YouTube pages open inside the app. Look-alike addresses such as `accounts.google.evil.com` now open in your normal browser instead.
+- **SmartScreen stays on** inside the app, along with the browser engine's security updates.
+- **The Themes & extensions window has a content security policy**, and extensions are re-checked against the extensions folder before they run.
 
 ## Downloads
 | Platform | File |
@@ -17,7 +20,7 @@ Thanks to [@geeknoid](https://github.com/geeknoid) for contributing this ([#6](h
 
 The same files are also here with the version in their names. Files ending in `.sig`, `.tar.gz` and `latest.json` are for the updater; you don't need them.
 
-Already on v0.3.0 or later? With updates set to Notify me, **Update to v0.4.2** appears in your tray menu.
+Already on v0.3.0 or later? With updates set to Notify me, **Update to v0.4.3** appears in your tray menu.
 
 The installers aren't code-signed yet: on Windows, SmartScreen may warn the first time (More info → Run anyway); on macOS, open System Settings → Privacy & Security and click Open Anyway.
 

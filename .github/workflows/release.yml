@@ -1,8 +1,11 @@
 # Builds Optimusic for Windows, Linux and macOS.
 #
 # Release: write .github/release-notes.md, bump the version, then push a tag:
-#   git tag v0.3.0 && git push origin v0.3.0
-# That creates a draft release, attaches every platform's installers, then publishes it.
+#   git tag vX.Y.Z && git push origin vX.Y.Z
+# That creates a draft release, attaches every platform's installers, then publishes it as a
+# PRE-RELEASE: the download links and in-app updates ignore it until it's promoted. Install it,
+# use it for a while (so antivirus cloud checks have run), then promote that exact build:
+#   gh release edit vX.Y.Z --prerelease=false --latest
 #
 # Test build: Actions → Release → Run workflow. Builds everything and keeps the installers
 # as workflow artifacts; nothing is released or signed.
@@ -128,4 +131,4 @@ jobs:
           mv *_amd64.deb Optimusic-Linux.deb
           mv *_amd64.AppImage Optimusic-Linux.AppImage
           gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" --clobber Optimusic-*
-      - run: gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/${{ needs.create-release.outputs.id }}" -F draft=false -f make_latest=true
+      - run: gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/${{ needs.create-release.outputs.id }}" -F draft=false -F prerelease=true -f make_latest=false
