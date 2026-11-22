@@ -2,6 +2,7 @@
 
 mod customize;
 mod discord;
+mod lyrics;
 #[cfg(target_os = "windows")]
 mod taskbar;
 mod updates;
@@ -296,10 +297,13 @@ fn main() {
             customize::set_extension,
             customize::open_customize_folder,
             customize::reload_music_page,
+            customize::set_synced_lyrics,
+            lyrics::synced_lyrics,
         ])
         .setup(|app| {
             let handle = app.handle().clone();
             customize::manage(&handle);
+            lyrics::manage(&handle);
 
             // ---- Main window: YouTube Music itself ----
             let nav_handle = handle.clone();

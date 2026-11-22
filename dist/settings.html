@@ -196,6 +196,18 @@
   </section>
 
   <section id="extensions" role="tabpanel" aria-labelledby="tab-extensions" hidden>
+    <h2>Built in</h2>
+    <div class="rows">
+      <div class="row">
+        <div class="text">
+          <div class="title">Synced lyrics</div>
+          <div class="sub">In the Lyrics tab, highlights the line being sung and lets you click any line to jump to it. Lyrics come from LRCLIB (lrclib.net), so the song's title and artist are sent there.</div>
+        </div>
+        <button class="switch" id="lyrics" role="switch" aria-checked="false" aria-label="Synced lyrics"></button>
+      </div>
+    </div>
+
+    <h2 class="block">Your extensions</h2>
     <div class="notice warn">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
       <div>Extensions run inside YouTube Music while you're signed in to Google, so a bad one could act on your account. Only turn on extensions you wrote or got from someone you trust.</div>
@@ -291,6 +303,7 @@
           t.description ? el("div", { class: "desc" }, t.description) : null))));
 
     $("promos").setAttribute("aria-checked", state.hidePromos);
+    $("lyrics").setAttribute("aria-checked", state.syncedLyrics);
     $("reload-notice").hidden = !state.needsReload;
 
     const list = $("ext-list");
@@ -318,6 +331,7 @@
   const refresh = () => act("customize_state");
 
   $("promos").addEventListener("click", () => act("set_hide_promos", { hide: !state.hidePromos }));
+  $("lyrics").addEventListener("click", () => act("set_synced_lyrics", { enabled: !state.syncedLyrics }));
   $("reload").addEventListener("click", async () => { await invoke("reload_music_page"); refresh(); });
   document.querySelectorAll("[data-open]").forEach((b) =>
     b.addEventListener("click", () => invoke("open_customize_folder", { kind: b.dataset.open })));

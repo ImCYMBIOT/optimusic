@@ -381,10 +381,22 @@
           "markdownDescription": "Enables the set_hide_promos command without any pre-configured scope."
         },
         {
+          "description": "Enables the set_synced_lyrics command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-set-synced-lyrics",
+          "markdownDescription": "Enables the set_synced_lyrics command without any pre-configured scope."
+        },
+        {
           "description": "Enables the set_theme command without any pre-configured scope.",
           "type": "string",
           "const": "allow-set-theme",
           "markdownDescription": "Enables the set_theme command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the synced_lyrics command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-synced-lyrics",
+          "markdownDescription": "Enables the synced_lyrics command without any pre-configured scope."
         },
         {
           "description": "Enables the track_update command without any pre-configured scope.",
@@ -429,10 +441,22 @@
           "markdownDescription": "Denies the set_hide_promos command without any pre-configured scope."
         },
         {
+          "description": "Denies the set_synced_lyrics command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-set-synced-lyrics",
+          "markdownDescription": "Denies the set_synced_lyrics command without any pre-configured scope."
+        },
+        {
           "description": "Denies the set_theme command without any pre-configured scope.",
           "type": "string",
           "const": "deny-set-theme",
           "markdownDescription": "Denies the set_theme command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the synced_lyrics command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-synced-lyrics",
+          "markdownDescription": "Denies the synced_lyrics command without any pre-configured scope."
         },
         {
           "description": "Denies the track_update command without any pre-configured scope.",

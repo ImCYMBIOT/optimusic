@@ -66,6 +66,9 @@ Your numbers will vary with your PC, your library and what's on screen.
 - **Discord Rich Presence:** "Listening to Optimusic (for YouTube Music)" with the song, artist, cover art, a
   progress bar, and "Listen on YouTube Music" and "Get Optimusic" buttons. Cleared when you pause, idle when Discord
   isn't running, and switchable from the tray ("Show on Discord")
+- **Synced lyrics (optional):** the Lyrics tab highlights the line being sung, follows the song,
+  and lets you click any line to jump to it. Lyrics come from [LRCLIB](https://lrclib.net); off
+  by default
 - **Background playback:** closing the window hides it to the tray and the music keeps playing
 - **Low-memory background mode:** while hidden or minimized, the webview stops rendering and trims its memory
 - **Themes and extensions:** built-in themes (AMOLED Black, Optimusic Violet), your own CSS
@@ -76,8 +79,8 @@ Your numbers will vary with your PC, your library and what's on screen.
 - **Single instance:** launching it again just brings the window back
 - Remembers window size and position
 - External links open in your normal browser; Google sign-in stays in the app
-- **Locked down:** the YouTube Music page can only report what's playing and open the settings
-  window; it can't change settings, turn on extensions or touch anything else
+- **Locked down:** the YouTube Music page can only report what's playing, open the settings
+  window and (if you turned it on) ask for synced lyrics; it can't change settings, turn on extensions or touch anything else
 
 ## Install (Windows)
 - [**Optimusic-Windows-Setup.exe**](https://github.com/ImCYMBIOT/optimusic/releases/latest/download/Optimusic-Windows-Setup.exe): installs just for you, no admin needed (recommended)
@@ -130,6 +133,12 @@ open so you can try a few.
   instead of red accents), or any theme you've added. **Hide upgrade prompts** is a separate
   switch that works with any theme; it hides the "Upgrade" entry and "Try Premium" pop-ups (it
   doesn't touch ads).
+- **Synced lyrics** (Extensions tab, built in): YouTube Music on PC only shows plain lyrics. With
+  this on, the Lyrics tab shows timed lyrics from [LRCLIB](https://lrclib.net), a free, open
+  lyrics database: the current line lights up, the list scrolls with the song (scroll yourself
+  and it waits a few seconds), and clicking a line jumps there. Songs LRCLIB doesn't have keep
+  YouTube Music's lyrics, in bigger, easier-to-read text. It sends the song's title, artist and
+  length to lrclib.net, so it's off until you turn it on.
 - **Extensions:** each one has its own switch and starts **off**. Turning one on asks you to
   confirm first.
 
@@ -265,6 +274,7 @@ src-tauri/
   src/taskbar.rs       Windows taskbar thumbnail buttons and album-art preview
   src/updates.rs       update checks and the tray's Updates menu
   src/customize.rs     themes and extensions, and the commands behind their window
+  src/lyrics.rs        synced lyrics lookup (LRCLIB); src/lyrics.js shows them in the page
   themes/              the built-in themes
   src/bridge.js        injected into the page: player control + now-playing reports
   capabilities/        IPC allow-lists: music.youtube.com vs. the app's own settings page

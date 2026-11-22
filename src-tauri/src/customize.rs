@@ -35,6 +35,9 @@ const BUILTIN: [(&str, &str, &str, [&str; 3], &str); 2] = [
 ];
 const DEFAULT_PREVIEW: [&str; 3] = ["#030303", "#212121", "#ff0000"];
 const NO_PROMOS: &str = include_str!("../themes/no-upgrade-prompts.css");
+/// The built-in Synced lyrics feature (see lyrics.rs). Our own code, so no warning is needed.
+const LYRICS_JS: &str = include_str!("lyrics.js");
+const LYRICS_OFF: &str = "window.__optimusicLyrics && window.__optimusicLyrics.stop();";
 /// Bigger files are ignored; no theme or extension needs a megabyte.
 const MAX_FILE: u64 = 1 << 20;
 
@@ -46,6 +49,8 @@ struct Settings {
     hide_promos: bool,
     /// File names of the enabled extensions
     extensions: Vec<String>,
+    /// Timed, clickable lyrics from LRCLIB (sends the song's title and artist to lrclib.net)
+    synced_lyrics: bool,
 }
 
 #[derive(Default)]
@@ -73,6 +78,9 @@ pub fn on_page_load(w: &WebviewWindow) {
     let settings = app.state::<Customize>().settings.lock().unwrap().clone();
     *app.state::<Customize>().needs_reload.lock().unwrap() = false;
     apply_theme(app, &settings);
+    if settings.synced_lyrics {
+        let _ = w.eval(lyrics_script());
+    }
     // Only files that are really in the extensions folder (the settings file could be edited)
     let present = files(&folder(app, "extensions"), "js");
     for file in settings.extensions.iter().filter(|f| present.contains(f)) {
@@ -128,6 +136,7 @@ pub struct View {
     themes: Vec<Theme>,
     theme: String,
     hide_promos: bool,
+    synced_lyrics: bool,
     extensions: Vec<Extension>,
     needs_reload: bool,
     themes_folder: String,
@@ -178,6 +187,7 @@ fn view(app: &AppHandle) -> View {
         themes,
         theme: s.theme,
         hide_promos: s.hide_promos,
+        synced_lyrics: s.synced_lyrics,
         extensions,
         needs_reload,
         themes_folder: themes_dir.to_string_lossy().into_owned(),
@@ -202,6 +212,21 @@ pub fn set_theme(app: AppHandle, id: String) -> View {
 pub fn set_hide_promos(app: AppHandle, hide: bool) -> View {
     update(&app, |s| s.hide_promos = hide);
     view(&app)
+}
+
+/// Switches Synced lyrics on or off right away, without reloading YouTube Music.
+#[tauri::command]
+pub fn set_synced_lyrics(app: AppHandle, enabled: bool) -> View {
+    update(&app, |s| s.synced_lyrics = enabled);
+    if let Some(w) = app.get_webview_window("main") {
+        let _ = w.eval(if enabled { lyrics_script() } else { LYRICS_OFF.to_string() });
+    }
+    view(&app)
+}
+
+/// Whether lyrics.rs may look up lyrics (the page can't turn this on itself).
+pub fn synced_lyrics_on(app: &AppHandle) -> bool {
+    app.state::<Customize>().settings.lock().unwrap().synced_lyrics
 }
 
 /// The page shows its own warning before calling this with `enabled: true`.
@@ -267,6 +292,13 @@ fn run_extension(app: &AppHandle, w: &WebviewWindow, file: &str) {
         "window.__optimusic && window.__optimusic.runExtension({}, function () {{\n{code}\n}});",
         json(file)
     ));
+}
+
+/// lyrics.js, only where bridge.js is running (music.youtube.com, not Google's sign-in pages)
+fn lyrics_script() -> String {
+    format!("if (window.__optimusic) {{
+{LYRICS_JS}
+}}")
 }
 
 fn theme_css(app: &AppHandle, s: &Settings) -> String {

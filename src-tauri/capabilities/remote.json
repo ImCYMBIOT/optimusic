@@ -1,10 +1,10 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "music-remote",
-  "description": "Lets music.youtube.com report now-playing info and open the settings window, and nothing more.",
+  "description": "Lets music.youtube.com report now-playing info, open the settings window and ask for synced lyrics (only when they are turned on), and nothing more.",
   "windows": ["main"],
   "remote": {
     "urls": ["https://music.youtube.com/*"]
   },
-  "permissions": ["allow-track-update", "allow-open-settings"]
+  "permissions": ["allow-track-update", "allow-open-settings", "allow-synced-lyrics"]
 }

@@ -13,6 +13,7 @@ ones.
 | **GitHub** (update download) | Only when you click "Update to vX", or at start-up if you chose "Install automatically" | A download request for the new version | Tray → Updates → **Off** |
 | **Album art** (Google's image servers) | When a song plays, on Windows | A request for the cover image, for the taskbar preview and the system media overlay | Not optional on Windows; it's the same image the page already loads |
 | **Discord** (the Discord app on your own computer) | While music plays and Discord is running | The song title, artist, album, cover image link, progress and a link to the song, which Discord then shows on your profile ([Discord's privacy policy](https://discord.com/privacy)) | Tray → **Show on Discord** |
+| **LRCLIB** (lrclib.net, an open lyrics database) | Only if you turn on Synced lyrics, when you open the Lyrics tab | The song's title, artist, album and length, to find its timed lyrics. LRCLIB sees your IP address, as for any website. | Themes & extensions → Extensions → **Synced lyrics** (off by default) |
 
 Optimusic doesn't contact anything else.
 

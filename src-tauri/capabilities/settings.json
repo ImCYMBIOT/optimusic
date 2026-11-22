@@ -9,6 +9,7 @@
     "allow-set-hide-promos",
     "allow-set-extension",
     "allow-open-customize-folder",
-    "allow-reload-music-page"
+    "allow-reload-music-page",
+    "allow-set-synced-lyrics"
   ]
 }
