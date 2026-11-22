@@ -1,14 +1,13 @@
-## New: taskbar controls on Windows
-Hover over Optimusic in the taskbar and you get **Previous, Play/Pause and Next** buttons right under the preview. While a song is playing (not a music video), the preview shows its **album art**, and the preview title and tray tooltip show what's playing.
+## New: synced lyrics
+YouTube Music on PC only shows plain lyrics. Turn on **Synced lyrics** (Themes & extensions → Extensions, under "Built in") and the Lyrics tab:
 
-Thanks to [@geeknoid](https://github.com/geeknoid) for contributing this ([#6](https://github.com/ImCYMBIOT/optimusic/pull/6)).
+- **highlights the line being sung** and scrolls along with the song (scroll yourself and it waits a few seconds before following again)
+- **jumps to any line you click**
+- keeps YouTube Music's own lyrics, in bigger, easier-to-read text, for songs that don't have timed lyrics
 
-This feature first shipped in v0.4.2, which was held back after Microsoft Defender flagged it by mistake. v0.4.3 is a fresh build with the same feature plus the security fixes below, tested before release.
+Timed lyrics come from [LRCLIB](https://lrclib.net), a free, open lyrics database. It's **off by default**, because it sends the song's title, artist and length to lrclib.net. The lookup is done by the app itself: YouTube Music's page can only ask for lyrics while the switch is on, and can't turn it on.
 
-## Security hardening
-- **Safer link handling:** only real Google and YouTube pages open inside the app. Look-alike addresses such as `accounts.google.evil.com` now open in your normal browser instead.
-- **SmartScreen stays on** inside the app, along with the browser engine's security updates.
-- **The Themes & extensions window has a content security policy**, and extensions are re-checked against the extensions folder before they run.
+Also in this release: everything from v0.4.3 (taskbar controls on Windows and the security hardening).
 
 ## Downloads
 | Platform | File |
@@ -20,7 +19,7 @@ This feature first shipped in v0.4.2, which was held back after Microsoft Defend
 
 The same files are also here with the version in their names. Files ending in `.sig`, `.tar.gz` and `latest.json` are for the updater; you don't need them.
 
-Already on v0.3.0 or later? With updates set to Notify me, **Update to v0.4.3** appears in your tray menu.
+Already on v0.3.0 or later? With updates set to Notify me, **Update to v0.4.4** appears in your tray menu.
 
 The installers aren't code-signed yet: on Windows, SmartScreen may warn the first time (More info → Run anyway); on macOS, open System Settings → Privacy & Security and click Open Anyway.
 
