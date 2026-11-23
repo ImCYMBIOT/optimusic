@@ -291,6 +291,13 @@ bench.ps1              Windows CPU/memory benchmark for a whole process tree
 - Mini-player window, desktop notifications on track change
 - Last.fm scrobbling
 
+### Would you use this?
+- **Now playing on the taskbar (Windows):** while Optimusic is in the tray, a small strip next to
+  the tray icons showing the album art and the song's name, like the weather button. Windows 11
+  doesn't let apps add things to the taskbar, so it would be a small window sitting on top of it
+  (about 1-3 MB of RAM, off by default). Would you turn it on? Tell us in
+  [an issue](https://github.com/ImCYMBIOT/optimusic/issues).
+
 ## Forking
 You're welcome to fork Optimusic. Building and running your fork works out of the box. To ship
 **updates** to your own users you'll need your own signing key, because updates are only
